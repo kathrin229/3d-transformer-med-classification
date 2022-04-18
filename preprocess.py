@@ -12,12 +12,11 @@ import matplotlib.image as img
 import numpy as np
 
 
-# TODO Count images per person
-# TODO Sample scans with 50 files
-# TODO Resize images -> 128x128
-# TODO add to matrix
+# TODO Count images (per lung) and do statistics --> playground "create table overview + graphs"
+# TODO RUN Sample scans, resize, normalize add to dataset, save for all
+# TODO start model building
 
-# TODO cut image
+# TODO later: cut image
 
 
 # for file in os.listdir(rootdir):
@@ -51,18 +50,24 @@ def stack_2D_images(path):
         down_width = 128
         down_points = (down_width, down_width)
         image_resize = cv2.resize(image_gray, down_points, interpolation= cv2.INTER_LINEAR)
+        image_resize = image_resize / 255
 
-        image_reshaped = np.reshape(image_resize, (128, 128, -1))
+        # image_reshaped = np.reshape(image_resize, (128, 128, -1)) TODO for 3D CNNs
 
         result.append(image_resize)
 
-    image_3D = np.stack(result, axis=2)
+    image_3D = np.stack(result, axis=0) # 2
     return image_3D
 
 
 rootpath_CP = '../../data/dataset_seg/CP'
+rootpath_NCP = '../../data/dataset_seg/NCP'
+rootpath_Normal = '../../data/dataset_seg/Normal'
 
 list_CP = []
+list_NCP = []
+list_Normal = []
+
 for directory in sorted(os.listdir(rootpath_CP)):
     subpath = os.path.join(rootpath_CP, directory)
 
@@ -72,10 +77,34 @@ for directory in sorted(os.listdir(rootpath_CP)):
         if len(os.listdir(subsubpath)) > 50:
             image_3D = stack_2D_images(subsubpath)
             list_CP.append(image_3D)
-        print('checkpoint')
 
+for directory in sorted(os.listdir(rootpath_NCP)):
+    subpath = os.path.join(rootpath_NCP, directory)
+
+    for subdirectory in sorted(os.listdir(subpath)):
+        subsubpath = os.path.join(subpath, subdirectory)
+
+        if len(os.listdir(subsubpath)) > 50:
+            image_3D = stack_2D_images(subsubpath)
+            list_NCP.append(image_3D)
+
+for directory in sorted(os.listdir(rootpath_Normal)):
+    subpath = os.path.join(rootpath_Normal, directory)
+
+    for subdirectory in sorted(os.listdir(subpath)):
+        subsubpath = os.path.join(subpath, subdirectory)
+
+        if len(os.listdir(subsubpath)) > 50:
+            image_3D = stack_2D_images(subsubpath)
+            list_Normal.append(image_3D)
 
 dataset_CP = np.stack(list_CP, axis = 0)
+dataset_NCP = np.stack(list_NCP, axis = 0)
+dataset_Normal = np.stack(list_Normal, axis = 0)
+
+np.save('data-arrays/dataset_CP', dataset_CP)
+np.save('data-arrays/dataset_NCP', dataset_NCP)
+np.save('data-arrays/dataset_Normal', dataset_Normal)
 
 
 
