@@ -27,16 +27,21 @@ import numpy as np
 
 
 ##### create function
-path = '../../data/dataset_seg/CP/1065/3104' #/0022.png'
+# path = '../../data/dataset_seg/CP/1065/3104' #/0022.png'
 
 def stack_2D_images(path):
 # first = True
     result = []
+    list_dir = sorted(os.listdir(path))
+    
+    start = int((len(list_dir) - 50) /2)
+    list_dir_50 = list_dir[start:start+50]
 
-    for directory in sorted(os.listdir(path)):
-        if directory == '.ipynb_checkpoints':
+
+    for image_file in list_dir_50:
+        if image_file == '.ipynb_checkpoints':
             break
-        img_path = os.path.join(path, directory)
+        img_path = os.path.join(path, image_file)
         image_gray = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
         #image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
@@ -54,23 +59,24 @@ def stack_2D_images(path):
     image_3D = np.stack(result, axis=2)
     return image_3D
 
-'''
+
 rootpath_CP = '../../data/dataset_seg/CP'
 
 list_CP = []
 for directory in sorted(os.listdir(rootpath_CP)):
     subpath = os.path.join(rootpath_CP, directory)
+
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
 
-        image_3D = stack_2D_images(subsubpath)
-        
-        list_CP.append(image_3D)
+        if len(os.listdir(subsubpath)) > 50:
+            image_3D = stack_2D_images(subsubpath)
+            list_CP.append(image_3D)
         print('checkpoint')
 
 
 dataset_CP = np.stack(list_CP, axis = 0)
-'''
+
 
 
 
