@@ -102,9 +102,9 @@ dataset_CP = np.stack(list_CP, axis = 0)
 dataset_NCP = np.stack(list_NCP, axis = 0)
 dataset_Normal = np.stack(list_Normal, axis = 0)
 
-np.save('data-arrays/dataset_CP', dataset_CP)
-np.save('data-arrays/dataset_NCP', dataset_NCP)
-np.save('data-arrays/dataset_Normal', dataset_Normal)
+np.savez_compressed('data-arrays/dataset_CP', dataset_CP)
+np.savez_compressed('data-arrays/dataset_NCP', dataset_NCP)
+np.savez_compressed('data-arrays/dataset_Normal', dataset_Normal)
 
 
 
