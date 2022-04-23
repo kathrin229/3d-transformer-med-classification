@@ -130,3 +130,9 @@ dmypy.json
 
 # vs code
 .vscode
+.virtualenvs
+
+# dataset
+dataset_seg.tar.gz
+data/**
+wget-log

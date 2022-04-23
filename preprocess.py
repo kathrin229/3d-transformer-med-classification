@@ -6,17 +6,28 @@ print(cv2.__version__)
 
 # import matplotlib
 
-import matplotlib.pyplot as plt
-import matplotlib.image as img
+# import matplotlib.pyplot as plt
+# import matplotlib.image as img
 
 import numpy as np
 
+# import tarfile
+  
+# file = tarfile.open('dataset_seg.tar.gz')
+# file.extractall('./data')
+  
+# file.close()
 
-# TODO Count images (per lung) and do statistics --> playground "create table overview + graphs"
-# TODO RUN Sample scans, resize, normalize add to dataset, save for all
-# TODO start model building
+# print('extracted')
 
-# TODO later: cut image
+
+# Done Count images (per lung) and do statistics --> playground "create table overview + graphs"
+# Done RUN Sample scans, resize, normalize add to dataset, save for all
+# Done start model building
+
+# TODO sampling strategy
+# TODO cut image
+# TODO improve CNN
 
 
 # for file in os.listdir(rootdir):
@@ -60,9 +71,9 @@ def stack_2D_images(path):
     return image_3D
 
 
-rootpath_CP = '../../data/dataset_seg/CP'
-rootpath_NCP = '../../data/dataset_seg/NCP'
-rootpath_Normal = '../../data/dataset_seg/Normal'
+rootpath_CP = './data/dataset_seg/CP'
+rootpath_NCP = './data/dataset_seg/NCP'
+rootpath_Normal = './data/dataset_seg/Normal'
 
 list_CP = []
 list_NCP = []
@@ -77,6 +88,7 @@ for directory in sorted(os.listdir(rootpath_CP)):
         if len(os.listdir(subsubpath)) > 50:
             image_3D = stack_2D_images(subsubpath)
             list_CP.append(image_3D)
+print('CP done')
 
 for directory in sorted(os.listdir(rootpath_NCP)):
     subpath = os.path.join(rootpath_NCP, directory)
@@ -88,6 +100,8 @@ for directory in sorted(os.listdir(rootpath_NCP)):
             image_3D = stack_2D_images(subsubpath)
             list_NCP.append(image_3D)
 
+print('NCP done')
+
 for directory in sorted(os.listdir(rootpath_Normal)):
     subpath = os.path.join(rootpath_Normal, directory)
 
@@ -97,6 +111,7 @@ for directory in sorted(os.listdir(rootpath_Normal)):
         if len(os.listdir(subsubpath)) > 50:
             image_3D = stack_2D_images(subsubpath)
             list_Normal.append(image_3D)
+print('Normal done')
 
 dataset_CP = np.stack(list_CP, axis = 0)
 dataset_NCP = np.stack(list_NCP, axis = 0)
@@ -105,6 +120,8 @@ dataset_Normal = np.stack(list_Normal, axis = 0)
 np.savez_compressed('data-arrays/dataset_CP', dataset_CP)
 np.savez_compressed('data-arrays/dataset_NCP', dataset_NCP)
 np.savez_compressed('data-arrays/dataset_Normal', dataset_Normal)
+
+print('done')
 
 
 
