@@ -136,3 +136,8 @@ dmypy.json
 dataset_seg.tar.gz
 data/**
 wget-log
+
+# plots/**
+
+*.npz
+*.h5
