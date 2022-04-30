@@ -4,6 +4,7 @@ import os
 import cv2
 print(cv2.__version__)
 
+import random
 # import matplotlib
 
 # import matplotlib.pyplot as plt
@@ -24,9 +25,15 @@ import numpy as np
 # Done Count images (per lung) and do statistics --> playground "create table overview + graphs"
 # Done RUN Sample scans, resize, normalize add to dataset, save for all
 # Done start model building
+# Done resize images to 512
 
-# TODO sampling strategy
-# TODO cut image
+# TODO figure out max bounding box size
+# TODO split train - test 
+
+# TODO new functions with sampling strategy
+# TODO cut image according to results of bounding box
+
+# TODO create new dataset
 # TODO improve CNN
 
 
@@ -39,11 +46,60 @@ import numpy as np
 ##### create function
 # path = '../../data/dataset_seg/CP/1065/3104' #/0022.png'
 
+def resize_crop(img_path):
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    img_resize = cv2.resize(img, (160, 160), interpolation= cv2.INTER_LINEAR)
+    img_crop = img_resize[32:32+128, 32:32+128]
+    return img_crop
+
+def crop_bounding_box_and_resize(img_path, window_w, window_h):
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+    # get biggest bounding box in img
+    x, y, w, h = find_biggest_bounding_box_in_img(img_path)
+
+    window_x = 0
+    window_y = 0
+
+    # put window around according to position of bounding box
+
+    # img_crop = # crop window
+
+    # img_resize = cv2.resize(img, (128, 128), interpolation= cv2.INTER_LINEAR) # resize image
+    # return img_resize # return image
+
+
 def stack_2D_images(path):
 # first = True
     result = []
     list_dir = sorted(os.listdir(path))
+
+    # delete .ipynb checkpoint
+    if list_dir[0] == '.ipynb_checkpoints':
+        list_dir.remove('.ipynb_checkpoints')
+
+    #########################################################
+    # random DOWN sampling:
+    # indices = list(range(0, len(list_dir)))
+    # good_indices = random.sample(indices, 32)
+    # good_indices.sort()
+    # list_dir_32 = [list_dir[i] for i in good_indices]
+
+    # symmetrical DOWN sampling:
+    # m = len(list_dir)
+    # k = int(m/32)
+    # if m % 2 == 1:
+    #     idx = int(m / 2) #CHANGE: not start at index 1 but index in the middle
+    # else:
+    #     idx = int(m / 2)# - 1 #CHANGE: not start at index -1 but at indes in the middle -1
+    # list_indices = []
+    # for i in range(32):
+    #     idx = idx + pow((-1), i) * i * k
+    #     list_indices.append(idx)
+    # list_indices.sort()
+    # list_dir_32 = [list_dir[i] for i in list_indices]
+    #########################################################
     
+
     start = int((len(list_dir) - 50) /2)
     list_dir_50 = list_dir[start:start+50]
 
