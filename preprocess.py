@@ -12,6 +12,8 @@ import random
 
 import numpy as np
 
+
+
 # import tarfile
   
 # file = tarfile.open('dataset_seg.tar.gz')
@@ -45,27 +47,6 @@ import numpy as np
 
 ##### create function
 # path = '../../data/dataset_seg/CP/1065/3104' #/0022.png'
-
-def resize_crop(img_path):
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    img_resize = cv2.resize(img, (160, 160), interpolation= cv2.INTER_LINEAR)
-    img_crop = img_resize[32:32+128, 32:32+128]
-    return img_crop
-
-def crop_bounding_box_and_resize(img_path, window_w, window_h):
-    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
-    # get biggest bounding box in img
-    x, y, w, h = find_biggest_bounding_box_in_img(img_path)
-
-    window_x = 0
-    window_y = 0
-
-    # put window around according to position of bounding box
-
-    # img_crop = # crop window
-
-    # img_resize = cv2.resize(img, (128, 128), interpolation= cv2.INTER_LINEAR) # resize image
-    # return img_resize # return image
 
 
 def stack_2D_images(path):
@@ -131,13 +112,22 @@ rootpath_CP = './data/dataset_seg/CP'
 rootpath_NCP = './data/dataset_seg/NCP'
 rootpath_Normal = './data/dataset_seg/Normal'
 
+# list_CP_train = []
+# list_CP_test = []
+
+# list_NCP_train = []
+# list_NCP_test = []
+
+# list_Normal_train = []
+# list_Normal_test = []
+
 list_CP = []
 list_NCP = []
 list_Normal = []
 
 for directory in sorted(os.listdir(rootpath_CP)):
     subpath = os.path.join(rootpath_CP, directory)
-
+    # check if train or test (len(train))
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
 
