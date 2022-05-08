@@ -1,5 +1,5 @@
 import os
-import cv2 as cv
+import cv2
 from bounding_box import find_biggest_bounding_box_in_img
 
 def resize_crop(img_path):
@@ -15,24 +15,31 @@ def crop_bounding_box_and_resize(img_path, window_w, window_h): #480 354
     # case no box found
     if w < 0:
         # center crop
-        window_x = (512 - window_w) /2
-        window_y = (512 - window_h) /2
+        window_x = int((512 - window_w) /2)
+        window_y = int((512 - window_h) /2)
         img_crop = img[window_y:window_y+window_h, window_x:window_x+window_w]
     # case box bigger than window w and h
     elif w > window_w or h > window_h:
         # center crop
+        window_x = int((512 - window_w) /2)
+        window_y = int((512 - window_h) /2)
         img_crop = img[window_y:window_y+window_h, window_x:window_x+window_w]
     else:
         window_x = x
         window_y = y
 
-        if window_x + window_w > 512:
-            window_x = window_x - (window_w - w)
-        if window_y + window_h > 512:
-            window_y = window_y - (window_h - h)
         if window_x + window_w > 512 and window_y + window_h > 512:
             window_x = window_x - (window_w - w)
             window_y = window_y - (window_h - h)
+        elif window_x + window_w > 512:
+            window_x = window_x - (window_w - w)
+        elif window_y + window_h > 512:
+            window_y = window_y - (window_h - h)
+
+        if window_x < 0 or window_y < 0:
+            window_x = int((512 - window_w) /2)
+            window_y = int((512 - window_h) /2)
+        
 
         # put window around according to position of bounding box
         img_crop = img[window_y:window_y+window_h, window_x:window_x+window_w] # crop window

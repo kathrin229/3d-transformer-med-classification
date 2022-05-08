@@ -60,7 +60,7 @@ def find_biggest_bounding_box_in_img(path):
     return x, y, w, h
 
 # data/dataset_seg/NCP/1042/2614/0000.png
-find_biggest_bounding_box_in_img('./data/dataset_seg/CP/1231/3449/0245.png')
+# find_biggest_bounding_box_in_img('./data/dataset_seg/CP/1231/3449/0245.png')
 #'./data/dataset_seg/NCP/2715/2708/0005.png'
 #'./data/dataset_seg/NCP/913/2455/0181.png'
 
@@ -177,4 +177,4 @@ for label in labels:
 '''
 #'./data/dataset_seg/NCP/2715/2708/0005.png'
 #'./data/dataset_seg/Normal/790/225/0025.png'
-print('done')
+# print('done')
