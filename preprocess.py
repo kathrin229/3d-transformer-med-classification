@@ -47,6 +47,7 @@ def stack_2D_images(path, sampling):
 
         #image = resize_crop(img_path)
         image = crop_bounding_box_and_resize(img_path, 477, 354)
+        image = image / 255
 
         # image_gray = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
         # #image_gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -145,13 +146,13 @@ dataset_CP_test = np.stack(list_CP_test, axis = 0)
 dataset_NCP_test = np.stack(list_NCP_test, axis = 0)
 dataset_Normal_test = np.stack(list_Normal_test, axis = 0)
 
-np.savez_compressed('data-arrays/dataset_CP_train_2', dataset_CP_train)
-np.savez_compressed('data-arrays/dataset_NCP_train_2', dataset_NCP_train)
-np.savez_compressed('data-arrays/dataset_Normal_train_2', dataset_Normal_train)
+np.savez_compressed('data-arrays/dataset_CP_train_2_scaled', dataset_CP_train)
+np.savez_compressed('data-arrays/dataset_NCP_train_2_scaled', dataset_NCP_train)
+np.savez_compressed('data-arrays/dataset_Normal_train_2_scaled', dataset_Normal_train)
 
-np.savez_compressed('data-arrays/dataset_CP_test_2', dataset_CP_test)
-np.savez_compressed('data-arrays/dataset_NCP_test_2', dataset_NCP_test)
-np.savez_compressed('data-arrays/dataset_Normal_test_2', dataset_Normal_test)
+np.savez_compressed('data-arrays/dataset_CP_test_2_scaled', dataset_CP_test)
+np.savez_compressed('data-arrays/dataset_NCP_test_2_scaled', dataset_NCP_test)
+np.savez_compressed('data-arrays/dataset_Normal_test_2_scaled', dataset_Normal_test)
 
 print('done')
 
