@@ -68,9 +68,9 @@ def stack_2D_images(path, sampling):
     return image_3D
 
 
-rootpath_CP = './data/dataset_seg/CP'
-rootpath_NCP = './data/dataset_seg/NCP'
-rootpath_Normal = './data/dataset_seg/Normal'
+rootpath_CP = '../data/dataset_seg/CP'
+rootpath_NCP = '../data/dataset_seg/NCP'
+rootpath_Normal = '../data/dataset_seg/Normal'
 
 list_CP_train = []
 list_CP_test = []

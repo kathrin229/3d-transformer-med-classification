@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-loader_CP = np.load('data-arrays/dataset_CP_train_2.npz')
-loader_NCP = np.load('data-arrays/dataset_NCP_train_2.npz')
-loader_Normal = np.load('data-arrays/dataset_Normal_train_2.npz')
+loader_CP = np.load('../data-arrays-final/dataset_CP_train_2_scaled.npz')
+loader_NCP = np.load('../data-arrays-final/dataset_NCP_train_2_scaled.npz')
+loader_Normal = np.load('../data-arrays-final/dataset_NCP_train_2_scaled.npz')
 
 dataset_CP = loader_CP['arr_0'] # 1176
 dataset_NCP = loader_NCP['arr_0'] # 1280
