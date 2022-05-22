@@ -6,13 +6,13 @@ from tensorflow.keras import layers
 # from DenseNet3D import DenseNet3D
 
 # TODO load also test set
-loader_CP = np.load('data-arrays-final/dataset_CP_train_2_scaled.npz')
-loader_NCP = np.load('data-arrays-final/dataset_NCP_train_2_scaled.npz')
-loader_Normal = np.load('data-arrays-final/dataset_Normal_train_2_scaled.npz')
+loader_CP = np.load('data-arrays-final/dataset_CP_train_3_scaled.npz')
+loader_NCP = np.load('data-arrays-final/dataset_NCP_train_3_scaled.npz')
+loader_Normal = np.load('data-arrays-final/dataset_Normal_train_3_scaled.npz')
 
-loader_CP_test = np.load('data-arrays-final/dataset_CP_test_2_scaled.npz')
-loader_NCP_test = np.load('data-arrays-final/dataset_NCP_test_2_scaled.npz')
-loader_Normal_test = np.load('data-arrays-final/dataset_Normal_test_2_scaled.npz')
+loader_CP_test = np.load('data-arrays-final/dataset_CP_test_3_scaled.npz')
+loader_NCP_test = np.load('data-arrays-final/dataset_NCP_test_3_scaled.npz')
+loader_Normal_test = np.load('data-arrays-final/dataset_Normal_test_3_scaled.npz')
 
 dataset_CP = loader_CP['arr_0'] # 1176
 dataset_NCP = loader_NCP['arr_0'] # 1280
@@ -32,21 +32,29 @@ dataset_CP = dataset_CP[:, :, :, :, np.newaxis]
 dataset_NCP = dataset_NCP[:, :, :, :, np.newaxis]
 dataset_Normal = dataset_Normal[:, :, :, :, np.newaxis]
 
-CP_labels = np.array([[1,0,0] for _ in range(len(dataset_CP))])
-NCP_labels = np.array([[0,1,0] for _ in range(len(dataset_NCP))])
-Normal_labels = np.array([[0,0,1] for _ in range(len(dataset_Normal))])
+# CP_labels = np.array([[1,0,0] for _ in range(len(dataset_CP))])
+# NCP_labels = np.array([[0,1,0] for _ in range(len(dataset_NCP))])
+# Normal_labels = np.array([[0,0,1] for _ in range(len(dataset_Normal))])
 
-x_train = np.concatenate((dataset_CP [:int(len(dataset_CP)*0.8)], dataset_NCP[:int(len(dataset_NCP)*0.8)], dataset_Normal[:int(len(dataset_Normal)*0.8)]), axis=0)
-y_train = np.concatenate((CP_labels[:int(len(dataset_CP)*0.8)], NCP_labels[:int(len(dataset_NCP)*0.8)], Normal_labels[:int(len(dataset_Normal)*0.8)]), axis=0)
-x_val = np.concatenate((dataset_CP[int(len(dataset_CP)*0.8):], dataset_NCP[int(len(dataset_NCP)*0.8):], dataset_Normal[int(len(dataset_Normal)*0.8):]), axis=0)
-y_val = np.concatenate((CP_labels[int(len(dataset_CP)*0.8):], NCP_labels[int(len(dataset_NCP)*0.8):], Normal_labels[int(len(dataset_Normal)*0.8):]), axis=0)
+# x_train = np.concatenate((dataset_CP [:int(len(dataset_CP)*0.8)], dataset_NCP[:int(len(dataset_NCP)*0.8)], dataset_Normal[:int(len(dataset_Normal)*0.8)]), axis=0)
+# y_train = np.concatenate((CP_labels[:int(len(dataset_CP)*0.8)], NCP_labels[:int(len(dataset_NCP)*0.8)], Normal_labels[:int(len(dataset_Normal)*0.8)]), axis=0)
+# x_val = np.concatenate((dataset_CP[int(len(dataset_CP)*0.8):], dataset_NCP[int(len(dataset_NCP)*0.8):], dataset_Normal[int(len(dataset_Normal)*0.8):]), axis=0)
+# y_val = np.concatenate((CP_labels[int(len(dataset_CP)*0.8):], NCP_labels[int(len(dataset_NCP)*0.8):], Normal_labels[int(len(dataset_Normal)*0.8):]), axis=0)
+
+CP_labels = np.array([[1,0] for _ in range(len(dataset_CP))])
+NCP_labels = np.array([[0,1] for _ in range(len(dataset_NCP))])
+
+x_train = np.concatenate((dataset_CP [:int(len(dataset_CP)*0.8)], dataset_NCP[:int(len(dataset_NCP)*0.8)]), axis=0)
+y_train = np.concatenate((CP_labels[:int(len(dataset_CP)*0.8)], NCP_labels[:int(len(dataset_NCP)*0.8)]), axis=0)
+x_val = np.concatenate((dataset_CP[int(len(dataset_CP)*0.8):], dataset_NCP[int(len(dataset_NCP)*0.8):]), axis=0)
+y_val = np.concatenate((CP_labels[int(len(dataset_CP)*0.8):], NCP_labels[int(len(dataset_NCP)*0.8):]), axis=0)
 
 train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
 validation_loader = tf.data.Dataset.from_tensor_slices((x_val, y_val))
 
 print('input created')
 
-batch_size = 32
+batch_size = 16
 # Augment the on the fly during training.
 train_dataset = (
     train_loader.shuffle(len(x_train))
@@ -89,13 +97,13 @@ print("Number of samples in train and validation are %d and %d."
 # https://github.com/JihongJu/keras-resnet3d#readme
 from resnet3d import Resnet3DBuilder
 
-model = Resnet3DBuilder.build_resnet_50((118, 160, 32, 1), 3)
+model = Resnet3DBuilder.build_resnet_50((118, 160, 32, 1), 2) #3
 
 # Define callbacks.
 checkpoint_cb = keras.callbacks.ModelCheckpoint(
-    "3d_image_classification.h5", save_best_only=True
+    "3d_image_classification_2_class_pneumonia.h5", save_best_only=True
 )
-early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_acc", patience=15)
+early_stopping_cb = keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=15)
 
 # model.summary()
 model.compile(optimizer='adam',
@@ -104,7 +112,7 @@ model.compile(optimizer='adam',
 model.fit(  x=x_train,
             y=y_train,
             batch_size=32,
-            epochs=30,
+            epochs=15,
             callbacks=[checkpoint_cb, early_stopping_cb],
             validation_data=validation_dataset)
 
@@ -151,6 +159,6 @@ for i, metric in enumerate(["accuracy", "loss"]):
     ax[i].set_xlabel("epochs")
     ax[i].set_ylabel(metric)
     ax[i].legend(["train", "val"])
-plt.savefig('resnet.png')
+plt.savefig('resnet_two_class_pneumonia_new_dataset.png')
 
 print("done")
