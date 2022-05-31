@@ -8,6 +8,9 @@ def resize_crop(img_path):
     img_crop = img_resize[32:32+128, 32:32+128]
     return img_crop
 
+# TODO new function that first determines the x and y position of the lung
+
+
 def crop_bounding_box_and_resize(img_path, window_w, window_h): #480 354
     img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
     # get biggest bounding box in img

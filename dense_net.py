@@ -6,15 +6,17 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
+# import medmnist
+
 
 # TODO load also test set
-loader_CP = np.load('data-arrays/dataset_CP_train_3_scaled.npz')
-loader_NCP = np.load('data-arrays/dataset_NCP_train_3_scaled.npz')
-loader_Normal = np.load('data-arrays/dataset_Normal_train_3_scaled.npz')
+loader_CP = np.load('data-arrays/dataset_CP_train_4_scaled.npz')
+loader_NCP = np.load('data-arrays/dataset_NCP_train_4_scaled.npz')
+loader_Normal = np.load('data-arrays/dataset_Normal_train_4_scaled.npz')
 
-loader_CP_test = np.load('data-arrays/dataset_CP_test_3_scaled.npz')
-loader_NCP_test = np.load('data-arrays/dataset_NCP_test_3_scaled.npz')
-loader_Normal_test = np.load('data-arrays/dataset_Normal_test_3_scaled.npz')
+loader_CP_test = np.load('data-arrays/dataset_CP_test_4_scaled.npz')
+loader_NCP_test = np.load('data-arrays/dataset_NCP_test_4_scaled.npz')
+loader_Normal_test = np.load('data-arrays/dataset_Normal_test_4_scaled.npz')
 
 dataset_CP = loader_CP['arr_0'] # 1176
 dataset_NCP = loader_NCP['arr_0'] # 1280
@@ -195,7 +197,7 @@ def build_model():
     ])
     return model
 
-checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("ct_model.h5",
+checkpoint_cb = tf.keras.callbacks.ModelCheckpoint("ct_model_no_dup.h5",
                                                     save_best_only=True)
 
 early_stopping_cb = tf.keras.callbacks.EarlyStopping(patience=10,
@@ -246,7 +248,7 @@ for i, metric in enumerate(["accuracy", "loss"]):
     ax[i].set_xlabel("epochs")
     ax[i].set_ylabel(metric)
     ax[i].legend(["train", "val"])
-plt.savefig('densenet_two_class_pneumonia_finetune.png')
+plt.savefig('densenet_two_class_pneumonia_finetune_no_dup.png')
 
 loss, acc, prec, rec = model.evaluate(test_ds)
 

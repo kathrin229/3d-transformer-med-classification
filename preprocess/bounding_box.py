@@ -53,9 +53,9 @@ def find_biggest_bounding_box_in_img(path):
     w = x_down - x
     h = y_down - y
 
-    cv.rectangle(im, (x, y), (x+w, y+h), (255, 0, 0), 3)
-    plt.imshow(im)
-    plt.show()
+    # cv.rectangle(im, (x, y), (x+w, y+h), (255, 0, 0), 3)
+    # plt.imshow(im)
+    # plt.show()
     
     return x, y, w, h
 

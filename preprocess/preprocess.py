@@ -9,6 +9,8 @@ from sampling import symmetrical_down_sampling
 from resize import resize_crop
 from resize import crop_bounding_box_and_resize
 
+from bounding_box import find_biggest_bounding_box_in_img
+
 # Done Count images (per lung) and do statistics --> playground "create table overview + graphs"
 # Done RUN Sample scans, resize, normalize add to dataset, save for all
 # Done start model building
@@ -22,10 +24,10 @@ from resize import crop_bounding_box_and_resize
 # TODO improve CNN
 
 
-def stack_2D_images(path, sampling):
+def stack_2D_images(path, list_dir, sampling):
 # first = True
     result = []
-    list_dir = sorted(os.listdir(path))
+    # list_dir = sorted(os.listdir(path))
 
     # delete .ipynb checkpoint
     if list_dir[0] == '.ipynb_checkpoints':
@@ -67,10 +69,28 @@ def stack_2D_images(path, sampling):
     image_3D = np.stack(result, axis=0) # 2
     return image_3D
 
+def find_lung_end(subsubpath):
+    first_time_zero = True
+    zero_path = ''
+    list_dir = sorted(os.listdir(subsubpath))
 
-rootpath_CP = '../data/dataset_seg/CP'
-rootpath_NCP = '../data/dataset_seg/NCP'
-rootpath_Normal = '../data/dataset_seg/Normal'
+    for image_file in list_dir:
+        if image_file != '.ipynb_checkpoints':
+
+            img_path = os.path.join(subsubpath, image_file)
+            x, y, w, h = find_biggest_bounding_box_in_img(img_path)
+            if w > 0 and first_time_zero:
+                first_time_zero = False
+                # w = 100 # or if w < 0 and then increase for the second time -> 2 lungs
+                # or cut off everything when w < 0 for the second time
+            if w < 0 and not first_time_zero:
+                zero_path = image_file
+                break
+    return zero_path
+
+rootpath_CP = 'data/dataset_seg/CP'
+rootpath_NCP = 'data/dataset_seg/NCP'
+rootpath_Normal = 'data/dataset_seg/Normal'
 
 list_CP_train = []
 list_CP_test = []
@@ -96,12 +116,19 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_CP))):
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
 
-        if len(os.listdir(subsubpath)) > 50:
+        end_path = find_lung_end(subsubpath)
+
+        list_dir = sorted(os.listdir(subsubpath))
+        if end_path != "":
+            idx = list_dir.index(end_path)
+            list_dir = list_dir[:idx+1] 
+
+        if len(list_dir) > 32:
             if patients_CP_train:
-                image_3D = stack_2D_images(subsubpath, 'RANDOM')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_CP_train.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_CP_test.append(image_3D)
 print('CP done')
 
@@ -112,12 +139,19 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_NCP))):
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
 
-        if len(os.listdir(subsubpath)) > 50:
+        end_path = find_lung_end(subsubpath)
+
+        list_dir = sorted(os.listdir(subsubpath))
+        if end_path != "":
+            idx = list_dir.index(end_path)
+            list_dir = list_dir[:idx+1]
+
+        if len(os.listdir(subsubpath)) > 32:
             if patients_NCP_train:
-                image_3D = stack_2D_images(subsubpath, 'RANDOM')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_NCP_train.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_NCP_test.append(image_3D)
 
 print('NCP done')
@@ -129,12 +163,19 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_Normal))):
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
 
-        if len(os.listdir(subsubpath)) > 50:
+        end_path = find_lung_end(subsubpath)
+
+        list_dir = sorted(os.listdir(subsubpath))
+        if end_path != "":
+            idx = list_dir.index(end_path)
+            list_dir = list_dir[:idx+1]
+
+        if len(os.listdir(subsubpath)) > 32:
             if patients_Normal_train:
-                image_3D = stack_2D_images(subsubpath, 'RANDOM')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_Normal_train.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_Normal_test.append(image_3D)
 print('Normal done')
 
@@ -146,13 +187,17 @@ dataset_CP_test = np.stack(list_CP_test, axis = 0)
 dataset_NCP_test = np.stack(list_NCP_test, axis = 0)
 dataset_Normal_test = np.stack(list_Normal_test, axis = 0)
 
-np.savez_compressed('data-arrays/dataset_CP_train_2_scaled', dataset_CP_train)
-np.savez_compressed('data-arrays/dataset_NCP_train_2_scaled', dataset_NCP_train)
-np.savez_compressed('data-arrays/dataset_Normal_train_2_scaled', dataset_Normal_train)
+# TODO turn around upside down lungs
+# scan = np.flipud(scan)
+# if bounding box first image bigger than bounding box last image: reverse
 
-np.savez_compressed('data-arrays/dataset_CP_test_2_scaled', dataset_CP_test)
-np.savez_compressed('data-arrays/dataset_NCP_test_2_scaled', dataset_NCP_test)
-np.savez_compressed('data-arrays/dataset_Normal_test_2_scaled', dataset_Normal_test)
+np.savez_compressed('data-arrays/dataset_CP_train_4_scaled', dataset_CP_train)
+np.savez_compressed('data-arrays/dataset_NCP_train_4_scaled', dataset_NCP_train)
+np.savez_compressed('data-arrays/dataset_Normal_train_4_scaled', dataset_Normal_train)
+
+np.savez_compressed('data-arrays/dataset_CP_test_4_scaled', dataset_CP_test)
+np.savez_compressed('data-arrays/dataset_NCP_test_4_scaled', dataset_NCP_test)
+np.savez_compressed('data-arrays/dataset_Normal_test_4_scaled', dataset_Normal_test)
 
 print('done')
 
