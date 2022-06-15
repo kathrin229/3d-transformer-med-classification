@@ -27,20 +27,32 @@ from bounding_box import find_biggest_bounding_box_in_img
 def stack_2D_images(path, list_dir, sampling):
 # first = True
     result = []
-    # list_dir = sorted(os.listdir(path))
 
     # delete .ipynb checkpoint
     if list_dir[0] == '.ipynb_checkpoints':
         list_dir.remove('.ipynb_checkpoints')
 
+    # check here if first bounding box > last bounding box
+    # set flag accordingly
+    # reverse = False
+    # first_img_path = os.path.join(path, list_dir[0])
+    # last_img_path = os.path.join(path, list_dir[-1])
+
+    # x_f, y_f, w_f, h_f = find_biggest_bounding_box_in_img(first_img_path)
+    # x_l, y_l, w_l, h_l = find_biggest_bounding_box_in_img(last_img_path)
+
+    # if w_l < w_f:
+    #     reverse = True
+        # 'data/dataset_seg/NCP/1001/2559/0000.png' should not be reversed
+        # 'data/dataset_seg/NCP/1002/2561/0000.png' should not be reversed, cut off one img more
+        # 'data/dataset_seg/NCP/1009/2570/0000.png' COMPLETELY UNORDERED CAN BE DELETED
+        # 'data/dataset_seg/NCP/1010/2572/0034.png'
     if sampling == 'RANDOM':
         list_dir_32 = random_down_sampling(list_dir)
     if sampling == 'SYMMETRIC':
         list_dir_32 = symmetrical_down_sampling(list_dir)
 
-    # start = int((len(list_dir) - 50) /2)
-    # list_dir_50 = list_dir[start:start+50]
-
+    # here: check x min and y min?
 
     for image_file in list_dir_32:
         if image_file == '.ipynb_checkpoints':
@@ -67,6 +79,10 @@ def stack_2D_images(path, list_dir, sampling):
         result.append(image)
 
     image_3D = np.stack(result, axis=0) # 2
+    # reverse here according to flag
+    # if reverse:
+    #     image_3D = np.flipud(image_3D)
+
     return image_3D
 
 def find_lung_end(subsubpath):
@@ -101,13 +117,21 @@ list_NCP_test = []
 list_Normal_train = []
 list_Normal_test = []
 
+num_patients_CP = 964
+num_patients_NCP = 916
+num_patients_Normal = 818
+
 patients_CP_train = True
 patients_NCP_train = True
 patients_Normal_train = True
+
+patients_CP_valid= False
+patients_NCP_valid= False
+patients_Normal_valid = False
 # list_CP = []
 # list_NCP = []
 # list_Normal = []
-
+'''
 for idx, directory in enumerate(sorted(os.listdir(rootpath_CP))):
     subpath = os.path.join(rootpath_CP, directory)
     # check if train or test (len(train))
@@ -131,20 +155,39 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_CP))):
                 image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_CP_test.append(image_3D)
 print('CP done')
-
+'''
 for idx, directory in enumerate(sorted(os.listdir(rootpath_NCP))):
     subpath = os.path.join(rootpath_NCP, directory)
     if idx >= 732:
         patients_NCP_train = False
     for subdirectory in sorted(os.listdir(subpath)):
         subsubpath = os.path.join(subpath, subdirectory)
-
-        end_path = find_lung_end(subsubpath)
-
         list_dir = sorted(os.listdir(subsubpath))
-        if end_path != "":
-            idx = list_dir.index(end_path)
-            list_dir = list_dir[:idx+1]
+
+        image_file = list_dir[0]
+        if image_file == '.ipynb_checkpoints':
+            image_file = list_dir[1]
+        img_path = os.path.join(subsubpath, image_file)
+        x, y, w, h = find_biggest_bounding_box_in_img(img_path)
+        if h > 150:
+            break
+
+        # wrong = False
+        # test = [1,2,3,4,5,6,7,8,9,10]
+        # for i in test:
+        #     img_path = os.path.join(subsubpath, list_dir[i])
+        #     x, y, w, h = find_biggest_bounding_box_in_img(img_path)
+        #     if w != -512:
+        #         wrong = True
+        # if wrong:
+        #     break
+
+        # end_path = find_lung_end(subsubpath)
+
+        # list_dir = sorted(os.listdir(subsubpath))
+        # if end_path != "":
+        #     idx = list_dir.index(end_path)
+        #     list_dir = list_dir[:idx+1]
 
         if len(os.listdir(subsubpath)) > 32:
             if patients_NCP_train:
@@ -155,7 +198,7 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_NCP))):
                 list_NCP_test.append(image_3D)
 
 print('NCP done')
-
+'''
 for idx, directory in enumerate(sorted(os.listdir(rootpath_Normal))):
     subpath = os.path.join(rootpath_Normal, directory)
     if idx >= 654:
@@ -178,26 +221,26 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_Normal))):
                 image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
                 list_Normal_test.append(image_3D)
 print('Normal done')
-
-dataset_CP_train = np.stack(list_CP_train, axis = 0)
+'''
+# dataset_CP_train = np.stack(list_CP_train, axis = 0)
 dataset_NCP_train = np.stack(list_NCP_train, axis = 0)
-dataset_Normal_train = np.stack(list_Normal_train, axis = 0)
+# dataset_Normal_train = np.stack(list_Normal_train, axis = 0)
 
-dataset_CP_test = np.stack(list_CP_test, axis = 0)
+# dataset_CP_test = np.stack(list_CP_test, axis = 0)
 dataset_NCP_test = np.stack(list_NCP_test, axis = 0)
-dataset_Normal_test = np.stack(list_Normal_test, axis = 0)
+# dataset_Normal_test = np.stack(list_Normal_test, axis = 0)
 
 # TODO turn around upside down lungs
 # scan = np.flipud(scan)
 # if bounding box first image bigger than bounding box last image: reverse
 
-np.savez_compressed('data-arrays/dataset_CP_train_4_scaled', dataset_CP_train)
-np.savez_compressed('data-arrays/dataset_NCP_train_4_scaled', dataset_NCP_train)
-np.savez_compressed('data-arrays/dataset_Normal_train_4_scaled', dataset_Normal_train)
+# np.savez_compressed('data-arrays/dataset_CP_train_4_scaled', dataset_CP_train)
+np.savez_compressed('data-arrays/dataset_NCP_train_99_discard', dataset_NCP_train)
+# np.savez_compressed('data-arrays/dataset_Normal_train_99turn', dataset_Normal_train)
 
-np.savez_compressed('data-arrays/dataset_CP_test_4_scaled', dataset_CP_test)
-np.savez_compressed('data-arrays/dataset_NCP_test_4_scaled', dataset_NCP_test)
-np.savez_compressed('data-arrays/dataset_Normal_test_4_scaled', dataset_Normal_test)
+# np.savez_compressed('data-arrays/dataset_CP_test_4_scaled', dataset_CP_test)
+np.savez_compressed('data-arrays/dataset_NCP_test_99_discard', dataset_NCP_test)
+# np.savez_compressed('data-arrays/dataset_Normal_test_99turn', dataset_Normal_test)
 
 print('done')
 
