@@ -254,9 +254,9 @@ def Encoder_f(num_layers, mlp_dim, num_heads, inputs):
 ######################################
 # hyperparameter section 
 ###################################### 
-transformer_layers = 6
-patch_size = 4 #16 #4 
-hidden_size = 512 #8192 #512
+transformer_layers = 2
+patch_size = 16 #16 #4 
+hidden_size = 8192 #8192 #512
 num_heads = 4
 mlp_dim = 128
 
@@ -305,7 +305,7 @@ reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.8,
 
 
 ViT_Train = ViT_model.fit(train_ds, 
-                        epochs = 7, 
+                        epochs = 5, 
                         validation_data=val_ds, callbacks=[reduce_lr])
 
 
@@ -351,7 +351,9 @@ import seaborn as sns
 
 def conf_matrix(predictions): 
     ''' Plots conf. matrix and classification report '''
-    cm=confusion_matrix(y_test, np.argmax(np.round(predictions), axis=1))
+    rounded_labels=np.argmax(y_test, axis=1)
+    cm=confusion_matrix(rounded_labels, np.argmax(np.round(predictions), axis=1))
+    # cm=confusion_matrix(y_test, np.argmax(np.round(predictions), axis=1))
     print("Classification Report:\n")
     cr=classification_report(y_test,
                                 np.argmax(np.round(predictions), axis=1), 
