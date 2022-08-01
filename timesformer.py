@@ -1,13 +1,15 @@
 from pathlib import Path
 
 import torch
-from TimeSformer.timesformer.models.vit import TimeSformer
+from timesformer.models.vit import TimeSformer
 from torch.utils.data import TensorDataset, DataLoader
 import copy
 import numpy as np
 
-model_file = Path.home()/'3d-transformer-med-classification/TimeSformer_divST_8x32_224_K600-2.pyth'
+model_file = Path('TimeSformer_divST_8x32_224_K600-2.pyth')
 model_file.exists()
+# /workspace/persistent/3d-transformer-med-classification/TimeSformer_divST_8x32_224_K600-2.pyth
+# TimeSformer_divST_8x32_224_K600-2.pyth
 
 model = TimeSformer(img_size=224, num_classes=600, num_frames=32, attention_type='divided_space_time',  pretrained_model=str(model_file))
 # model.model.default_cfg['input_size'] = (1, 224, 224)

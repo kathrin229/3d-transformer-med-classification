@@ -141,3 +141,6 @@ wget-log
 
 *.npz
 *.h5
+*.pyth
+
+timesformer/
