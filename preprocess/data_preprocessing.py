@@ -4,13 +4,17 @@ import random
 import numpy as np
 
 from data_preprocessing_functions import stack_2D_images
-from data_preprocessing_functions import correct_dataset
+from data_preprocessing_functions import correct_datasets
 
 rootpath_CP = 'data/dataset_seg/CP'
 rootpath_NCP = 'data/dataset_seg/NCP'
 rootpath_Normal = 'data/dataset_seg/Normal'
 
 NUM_SLICES_PER_SCAN = 32
+WINDOW_W = 480
+WINDOW_H = 384
+FINAL_W = 160
+FINAL_H = 128
 
 PERCENT_TRAIN = 0.60 # 0.65
 PERCENT_VALID = 0.15 # 0.20
@@ -59,13 +63,13 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_CP))):
         list_dir = sorted(os.listdir(subsubpath))
         if len(list_dir) > NUM_SLICES_PER_SCAN:
             if patients_CP_train:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_CP_train.append(image_3D)
             elif patients_CP_valid:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_CP_valid.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_CP_test.append(image_3D)
 print('CP done')
 
@@ -83,13 +87,13 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_NCP))):
         list_dir = sorted(os.listdir(subsubpath))
         if len(list_dir) > NUM_SLICES_PER_SCAN:
             if patients_NCP_train:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_NCP_train.append(image_3D)
             elif patients_NCP_valid:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_NCP_valid.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_NCP_test.append(image_3D)
 
 print('NCP done')
@@ -108,13 +112,13 @@ for idx, directory in enumerate(sorted(os.listdir(rootpath_Normal))):
         list_dir = sorted(os.listdir(subsubpath))
         if len(list_dir) > NUM_SLICES_PER_SCAN:
             if patients_Normal_train:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_Normal_train.append(image_3D)
             elif patients_Normal_valid:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_Normal_valid.append(image_3D)
             else:
-                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC')
+                image_3D = stack_2D_images(subsubpath, list_dir, 'SYMMETRIC', NUM_SLICES_PER_SCAN, WINDOW_W, WINDOW_H, FINAL_W, FINAL_H)
                 list_Normal_test.append(image_3D)
 print('Normal done')
 
@@ -131,23 +135,23 @@ dataset_CP_test = np.stack(list_CP_test, axis = 0)
 dataset_NCP_test = np.stack(list_NCP_test, axis = 0)
 dataset_Normal_test = np.stack(list_Normal_test, axis = 0)
 
-datasets = [dataset_CP, dataset_NCP, dataset_Normal,
+datasets = [dataset_CP_train, dataset_NCP_train, dataset_Normal_train,
             dataset_CP_valid, dataset_NCP_valid, dataset_Normal_valid,
             dataset_CP_test, dataset_NCP_test, dataset_Normal_test]
 
-dataset_list, discard_list = correct_dataset(datasets)
+dataset_list, discard_list = correct_datasets(datasets, FINAL_W, FINAL_H)
 print(sum(discard_list))
 
-np.savez_compressed('data-arrays/dataset_CP_train_5_corrected', dataset_list[0])
-np.savez_compressed('data-arrays/dataset_NCP_train_5_corrected', dataset_list[1])
-np.savez_compressed('data-arrays/dataset_Normal_train_5_corrected', dataset_list[2])
+np.savez_compressed('data-arrays/dataset_CP_train_small', dataset_list[0])
+np.savez_compressed('data-arrays/dataset_NCP_train_small', dataset_list[1])
+np.savez_compressed('data-arrays/dataset_Normal_train_small', dataset_list[2])
 
-np.savez_compressed('data-arrays/dataset_CP_valid_5_corrected', dataset_list[3])
-np.savez_compressed('data-arrays/dataset_NCP_valid_5_corrected', dataset_list[4])
-np.savez_compressed('data-arrays/dataset_Normal_valid_5_corrected', dataset_list[5])
+np.savez_compressed('data-arrays/dataset_CP_valid_small', dataset_list[3])
+np.savez_compressed('data-arrays/dataset_NCP_valid_small', dataset_list[4])
+np.savez_compressed('data-arrays/dataset_Normal_valid_small', dataset_list[5])
 
-np.savez_compressed('data-arrays/dataset_CP_test_5_corrected', dataset_list[6])
-np.savez_compressed('data-arrays/dataset_NCP_test_5_corrected', dataset_list[7])
-np.savez_compressed('data-arrays/dataset_Normal_test_5_corrected', dataset_list[8])
+np.savez_compressed('data-arrays/dataset_CP_test_small', dataset_list[6])
+np.savez_compressed('data-arrays/dataset_NCP_test_small', dataset_list[7])
+np.savez_compressed('data-arrays/dataset_Normal_test_small', dataset_list[8])
 
 print('done')
