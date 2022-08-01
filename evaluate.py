@@ -1,20 +1,21 @@
 import tensorflow as tf
 from tensorflow import keras
 from sklearn import metrics
+
 import numpy as np
 import pandas as pd
 
-loader_CP_test = np.load('data-arrays-final/dataset_CP_test_2_scaled.npz')
-loader_NCP_test = np.load('data-arrays-final/dataset_NCP_test_2_scaled.npz')
-loader_Normal_test = np.load('data-arrays-final/dataset_Normal_test_2_scaled.npz')
+loader_CP_test = np.load('data-arrays-final/dataset_CP_test_small.npz')
+loader_NCP_test = np.load('data-arrays-final/dataset_NCP_test_small.npz')
+loader_Normal_test = np.load('data-arrays-final/dataset_Normal_test_small.npz')
 
 dataset_CP_test = loader_CP_test['arr_0'] # 1176
 dataset_NCP_test = loader_NCP_test['arr_0'] # 1280
 dataset_Normal_test = loader_Normal_test['arr_0'] # 850
 
-dataset_CP_test = dataset_CP_test.reshape(-1, 118, 160, 32)
-dataset_NCP_test = dataset_NCP_test.reshape(-1, 118, 160, 32)
-dataset_Normal_test = dataset_Normal_test.reshape(-1, 118, 160, 32)
+dataset_CP_test = dataset_CP_test.reshape(-1, 80, 64, 16)
+dataset_NCP_test = dataset_NCP_test.reshape(-1, 80, 64, 16)
+dataset_Normal_test = dataset_Normal_test.reshape(-1, 80, 64, 16)
 
 dataset_CP_test = dataset_CP_test[:, :, :, :, np.newaxis]
 dataset_NCP_test = dataset_NCP_test[:, :, :, :, np.newaxis]
@@ -36,7 +37,7 @@ y_test = np.concatenate((Normal_labels, NCP_labels), axis=0)
 
 print("data loaded")
 
-model = keras.models.load_model("3d_image_classification_2_class_pneumonia.h5")
+model = keras.models.load_model("3d_densenet_2class_small_data.h5")
 
 # results = model.evaluate(x_test, y_test, batch_size=32)
 # print("test loss, test acc:", results)
