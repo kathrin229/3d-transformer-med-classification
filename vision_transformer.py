@@ -29,17 +29,17 @@ dataset_CP_test = loader_CP_test['arr_0'] # 1176
 dataset_NCP_test = loader_NCP_test['arr_0'] # 1280
 dataset_Normal_test = loader_Normal_test['arr_0'] # 850
 
-dataset_CP = dataset_CP.reshape(-1, 160, 128, 32)
-dataset_NCP = dataset_NCP.reshape(-1, 160, 128, 32)
-dataset_Normal = dataset_Normal.reshape(-1, 160, 128, 32)
+# dataset_CP = dataset_CP.reshape(-1, 160, 128, 32)
+# dataset_NCP = dataset_NCP.reshape(-1, 160, 128, 32)
+# dataset_Normal = dataset_Normal.reshape(-1, 160, 128, 32)
 
-dataset_CP_valid = dataset_CP_valid.reshape(-1, 160, 128, 32)
-dataset_NCP_valid = dataset_NCP_valid.reshape(-1, 160, 128, 32)
-dataset_Normal_valid = dataset_Normal_valid.reshape(-1, 160, 128, 32)
+# dataset_CP_valid = dataset_CP_valid.reshape(-1, 160, 128, 32)
+# dataset_NCP_valid = dataset_NCP_valid.reshape(-1, 160, 128, 32)
+# dataset_Normal_valid = dataset_Normal_valid.reshape(-1, 160, 128, 32)
 
-dataset_CP_test = dataset_CP_test.reshape(-1, 160, 128, 32)
-dataset_NCP_test = dataset_NCP_test.reshape(-1, 160, 128, 32)
-dataset_Normal_test = dataset_Normal_test.reshape(-1, 160, 128, 32)
+# dataset_CP_test = dataset_CP_test.reshape(-1, 160, 128, 32)
+# dataset_NCP_test = dataset_NCP_test.reshape(-1, 160, 128, 32)
+# dataset_Normal_test = dataset_Normal_test.reshape(-1, 160, 128, 32)
 
 dataset_CP = dataset_CP[:, :, :, :, np.newaxis]
 dataset_NCP = dataset_NCP[:, :, :, :, np.newaxis]
@@ -111,12 +111,20 @@ class generate_patch(layers.Layer):
     self.patch_size = patch_size
     
   def call(self, images):
-    batch_size = tf.shape(images)[0]
-    patches = layers.Conv3D(self.patch_size*self.patch_size*32*1, (self.patch_size, self.patch_size, 32), (self.patch_size, self.patch_size, 32), padding='valid')(images)
+    batch_size = 1 #tf.shape(images)[0][0]
+    input_img = images[0][0]
+    input_img = tf.reshape(input_img, [1, 128, 160, 1]) 
+    # patches = tf.image.extract_patches(images=input_img, 
+    #                                     sizes=[1, self.patch_size, self.patch_size, 1], 
+    #                                     strides=[1, self.patch_size, self.patch_size, 1], rates=[1, 1, 1, 1], padding="VALID")
+    patches = layers.Conv2D(self.patch_size*self.patch_size, self.patch_size, self.patch_size, padding='valid')(input_img)
 
-    patches = tf.extract_volume_patches(input=images, 
-                                            ksizes=[1, self.patch_size, self.patch_size, 32, 1], 
-                                            strides=[1, self.patch_size, self.patch_size, 32, 1], padding="VALID")
+    # patches = layers.Conv3D(self.patch_size*self.patch_size*32*1, (self.patch_size, self.patch_size, 32), (self.patch_size, self.patch_size, 32), padding='valid')(images)
+
+    # patches = tf.extract_volume_patches(input=images, 
+    #                                         ksizes=[1, self.patch_size, self.patch_size, 32, 1], 
+    #                                         strides=[1, self.patch_size, self.patch_size, 32, 1], padding="VALID")
+    # observation with shape 1 32 128 160 1 more realisitc output, still wrong
     patch_dims = patches.shape[-1]
     patches = tf.reshape(patches, [batch_size, -1, patch_dims]) #here shape is (batch_size, num_patches, patch_h*patch_w*c) 
     return patches
@@ -139,10 +147,10 @@ patch_size= 16
 # num patches (W * H) /P^2 where W, H are from original image, P is patch dim. 
 # Original image (H * W * C), patch N * P*P *C, N num patches
 ######################
-# generate_patch_layer = generate_patch(patch_size=patch_size)
-# patches = generate_patch_layer(train_iter_7im)
+generate_patch_layer = generate_patch(patch_size=patch_size)
+patches = generate_patch_layer(train_iter_7im)
 
-# print ('patch per image and patches shape: ', patches.shape[1], '\n', patches.shape)
+print ('patch per image and patches shape: ', patches.shape[1], '\n', patches.shape)
 
 
 ##########-----------
@@ -165,17 +173,17 @@ def render_image_and_patches(image, patches):
     #     ax.imshow(tf.cast(patch, tf.uint8))
     #     ax.axis('off')    
     # plt.savefig('patches.png')
-    patches_iterate = patches #tf.reshape(patches, (1, 4, 20, 8192))#(1, 4, 80, 2048))
-    for i, patch in enumerate(patches_iterate[0]): # patches_iterate[0][0]
+    patches_iterate = patches[0]#[0:80] #tf.reshape(patches, (1, 4, 20, 8192))#(1, 4, 80, 2048))
+    for i, patch in enumerate(patches_iterate): # patches_iterate[0][0]
         ax = plt.subplot(8, 10, i+1) # 8, 10
-        # patch_img = tf.reshape(patch, (patch_size, patch_size, 8, 1))
-        patch_img = tf.reshape(patch, (32, patch_size, patch_size, 1))
+        patch_img = tf.reshape(patch, (patch_size, patch_size, 1))
+        #patch_img = tf.reshape(patch, (32, patch_size, patch_size, 1))
         patch_img = patch_img * 255
-        ax.imshow(patch_img[0].numpy().astype("uint8")) #x
+        ax.imshow(patch_img.numpy().astype("uint8")) #x
         ax.axis('off')    
     plt.savefig('patches.png')
 
-# render_image_and_patches(train_iter_7im, patches)
+render_image_and_patches(train_iter_7im, patches)
 
 class PatchEncode_Embed(layers.Layer):
   '''
@@ -195,8 +203,8 @@ class PatchEncode_Embed(layers.Layer):
     encoded = self.projection(patch) + self.position_embedding(positions)
     return encoded
 
-# patch_encoder = PatchEncode_Embed(80, 80)(patches)
-# print (tf.shape(patch_encoder))
+patch_encoder = PatchEncode_Embed(80, 80)(patches)
+print (tf.shape(patch_encoder))
 
 def generate_patch_conv_orgPaper_f(patch_size, hidden_size, inputs):
   patches = layers.Conv3D(patch_size*patch_size*32*1, (patch_size, patch_size, 32), (patch_size, patch_size, 32), padding='valid')(inputs)
