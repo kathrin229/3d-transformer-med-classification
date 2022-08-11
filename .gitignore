@@ -144,3 +144,5 @@ wget-log
 *.pyth
 
 timesformer/
+tools/
+configs/
