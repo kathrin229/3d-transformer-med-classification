@@ -1,16 +1,17 @@
 from pathlib import Path
-
+import time
 import torch
 from timesformer.models.vit import TimeSformer
 from torch.utils.data import TensorDataset, DataLoader
 import copy
 import numpy as np
+import matplotlib.pyplot as plt
 
 model_file = Path('TimeSformer_divST_8x32_224_K600-2.pyth')
 model_file.exists()
 # /workspace/persistent/3d-transformer-med-classification/TimeSformer_divST_8x32_224_K600-2.pyth
 # TimeSformer_divST_8x32_224_K600-2.pyth
-
+start_time = time.time()
 model = TimeSformer(img_size=224, num_classes=600, num_frames=32, attention_type='divided_space_time',  pretrained_model=str(model_file))
 # model.model.default_cfg['input_size'] = (1, 224, 224)
 
@@ -64,13 +65,16 @@ tensor_x = torch.Tensor(x_train) # transform to torch tensor
 tensor_y = torch.Tensor(y_train)
 
 my_dataset = TensorDataset(tensor_x,tensor_y) # create your datset
+
 trainloader = DataLoader(my_dataset, batch_size=4, shuffle=True, num_workers=2) # create your dataloader
+# validloader = DataLoader(valid, batch_size=32) # validation loader
+
 print("data finished")
 import torch.optim as optim
 
 criterion = torch.nn.CrossEntropyLoss()
 optimizer = optim.SGD(model2.parameters(), lr=0.001, momentum=0.9)
-
+'''
 for epoch in range(2):  # loop over the dataset multiple times
 
     running_loss = 0.0
@@ -89,13 +93,53 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # print statistics
         running_loss += loss.item()
-        if i % 100 == 0:    # print every 2000 mini-batches
-            print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.7f}')
-            running_loss = 0.0
+        # if i % 100 == 0:    # print every 2000 mini-batches
+        #     print(f'[{epoch + 1}, {i + 1:5d}] loss: {running_loss / 2000:.7f}')
+        #     running_loss = 0.0
+
+    loss_values.append(running_loss / len(my_dataset))
+plt.plot(loss_values)
+'''
+epochs = 5
+min_valid_loss = np.inf
+for e in range(epochs):
+    train_loss = 0.0
+    model2.train()     # Optional when not using Model Specific layer
+    for data, labels in trainloader:
+        if torch.cuda.is_available():
+            data, labels = data.cuda(), labels.cuda()
+        
+        optimizer.zero_grad()
+        target = model2(data)
+        loss = criterion(target,labels)
+        loss.backward()
+        optimizer.step()
+        train_loss += loss.item()
+        
+        valid_loss = 0.0
+        model.eval()     # Optional when not using Model Specific layer
+        for data, labels in validloader:
+            if torch.cuda.is_available():
+                data, labels = data.cuda(), labels.cuda()
+            
+            target = model(data)
+            loss = criterion(target,labels)
+            valid_loss = loss.item() * data.size(0)
+
+        print(f'Epoch {e+1} \t\t Training Loss: {train_loss / len(trainloader)} \t\t Validation Loss: {valid_loss / len(validloader)}')
+        if min_valid_loss > valid_loss:
+            print(f'Validation Loss Decreased({min_valid_loss:.6f}--->{valid_loss:.6f}) \t Saving The Model')
+            min_valid_loss = valid_loss
+            # Saving State Dict
+            torch.save(model.state_dict(), 'saved_model.pth')
 
 print('Finished Training')
 
 PATH = './timesformer_net.pth'
 torch.save(model2.state_dict(), PATH)
+print("--- %s seconds ---" % (time.time() - start_time))
+
+with open('runtime.txt', 'w') as f:
+    f.write("--- %s seconds ---" % (time.time() - start_time))
 
 print('done')
