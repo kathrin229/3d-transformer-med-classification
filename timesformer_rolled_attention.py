@@ -142,20 +142,50 @@ class DividedAttentionRollout():
         self.hooks.append(m.register_forward_hook(self.get_attn_s))
     preds = self.model(input_tensor)
     for h in self.hooks: h.remove()
-    for attn_t,attn_s in zip(self.time_attentions, self.space_attentions):
-      self.attentions.append(combine_divided_attention(attn_t,attn_s))
-    p,t = self.attentions[0].shape[0], self.attentions[0].shape[1]
-    result = torch.eye(p*t)
-    for attention in self.attentions:
-      attention = rearrange(attention, 'p1 t1 p2 t2 -> (p1 t1) (p2 t2)')
-      result = torch.matmul(attention, result)
-    mask = rearrange(result, '(p1 t1) (p2 t2) -> p1 t1 p2 t2', p1 = p, p2=p)
-    mask = mask.mean(dim=1)
+
+    # for attn_t,attn_s in zip(self.time_attentions, self.space_attentions):
+    #   self.attentions.append(combine_divided_attention(attn_t,attn_s))
+    # p,t = self.attentions[0].shape[0], self.attentions[0].shape[1]
+    # result = torch.eye(p*t)
+    # for attention in self.attentions:
+    #   attention = rearrange(attention, 'p1 t1 p2 t2 -> (p1 t1) (p2 t2)')
+    #   result = torch.matmul(attention, result)
+    # mask = rearrange(result, '(p1 t1) (p2 t2) -> p1 t1 p2 t2', p1 = p, p2=p)
+    # mask = mask.mean(dim=1)
+    # mask = mask[0,1:,:]
+    # width = int(mask.size(0)**0.5)
+    # mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
+    # mask = mask / np.max(mask)
+    # return(mask)
+
+
+    # NEW
+    for attention in self.space_attentions:
+      attention = attention.mean(dim = 1)
+      # attention = attention +  torch.eye(attention.size(-1))[None,...]
+      # attention = attention / attention.sum(-1)[...,None]
+
+      # attn_cls = attention[0,:,:]
+      # # average the cls_token attention and repeat across the frames
+      # attn_cls_a = attn_cls.mean(dim=0)
+      # attn_cls_a = repeat(attn_cls_a, 't -> j t', j = 20)
+      self.attentions.append(attention)
+
+    result = self.attentions[0]
+    for i in range(1,12):
+      result = torch.matmul(self.attentions[i], result)
+
+    # mask = result.mean(dim=1)
+    mask = rearrange(result, 't p k -> p k t')
     mask = mask[0,1:,:]
+    mask = rearrange(mask, '(t n) x -> (n x) t', n = 4)
     width = int(mask.size(0)**0.5)
     mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
     mask = mask / np.max(mask)
     return(mask)
+    
+
+
 
 """# load the pretrained model
 
@@ -165,8 +195,9 @@ download the pre-trainde model
 # ! wget https://dl.dropboxusercontent.com/s/tybhuml57y24wpm/TimeSformer_divST_8_224_SSv2.pyth
 
 """load the model"""
-model = torch.load('timesformer_big_data_15_epochs_3_classes.pt')
-
+# model = torch.load('timesformer_big_data_15_epochs_3_classes.pt')
+model = torch.load('timesformer_model_big_20_epochs_2_classes_space_limited_2_2.pt')
+#timesformer_model_big_20_epochs_2_classes_space_limited_2_2.pt
 # model_file = '/content/TimeSformer/TimeSformer_divST_8_224_SSv2.pyth'
 # Path(model_file).exists()
 
@@ -187,7 +218,7 @@ model = torch.load('timesformer_big_data_15_epochs_3_classes.pt')
 # path_to_video = Path('example_data/74225/')
 # path_to_video.exists()
 
-loader_CP_test = np.load('data-arrays/dataset_Normal_test_5_corrected.npz')
+loader_CP_test = np.load('data-arrays/dataset_CP_test_5_corrected.npz')
 dataset_CP_test = loader_CP_test['arr_0']
 dataset_CP_test = dataset_CP_test.reshape(-1, 160, 128, 32)
 dataset_CP_test = dataset_CP_test[:, :, :, :, np.newaxis]
@@ -212,7 +243,7 @@ Create a `DividedAttentionRollout` object (`att_roll`) and call it to get a mask
 """
 dataset_new = loader_CP_test['arr_0']
 dataset_new = dataset_new.reshape(-1, 32, 128, 160)
-scan = 100
+scan = 100 #60 #100
 
 att_roll = DividedAttentionRollout(model)
 masks = att_roll(dataset_CP_test[scan])
@@ -224,6 +255,6 @@ masks = create_masks(list(rearrange(masks, 'h w t -> t h w')),dataset_new[scan])
 # cv2.imshow('img', np.hstack(np_imgs))
 # cv2.imshow('img2', np.hstack(masks))
 cv2.imwrite('images.jpg', np.hstack(dataset_new[scan]*255))
-cv2.imwrite('masks.jpg', np.hstack(masks))
+cv2.imwrite('masks_method_3_sl.jpg', np.hstack(masks))
 
 print("done")
