@@ -64,14 +64,24 @@ def create_video_input(path_to_video):
   return(frames)
 
 def show_mask_on_image(img, mask):
-    # img = np.stack((img,)*3, axis=-1)
+    img = np.stack((img,)*3, axis=-1)
     # img = np.float32(img) / 255
-    heatmap = cv2.applyColorMap(np.uint8(255 * mask), cv2.COLORMAP_JET)
-    heatmap = np.float32(heatmap) / 255
+    mask = np.uint8(255 * mask)
+    max = mask.max()
+    min = mask.min()
+    thresh = max * 0.4
+
+    mask[mask < thresh] = 0
+    img = np.uint8(img*255)
+    
+    heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
+    # heatmap = np.float32(heatmap) / 255
     # cam = heatmap + np.float32(img)
+    cam = heatmap + img
     # cam = cam / np.max(cam)
     # return np.uint8(255 * cam)
-    return np.uint8(255 * heatmap)
+    return cam
+    # return np.uint8(255 * heatmap)
 
 
 def create_masks(masks_in, np_imgs):
@@ -162,13 +172,13 @@ class DividedAttentionRollout():
     # NEW
     for attention in self.space_attentions:
       attention = attention.mean(dim = 1)
-      # attention = attention +  torch.eye(attention.size(-1))[None,...]
-      # attention = attention / attention.sum(-1)[...,None]
+      attention = attention +  torch.eye(attention.size(-1))[None,...]
+      attention = attention / attention.sum(-1)[...,None]
 
-      # attn_cls = attention[0,:,:]
-      # # average the cls_token attention and repeat across the frames
-      # attn_cls_a = attn_cls.mean(dim=0)
-      # attn_cls_a = repeat(attn_cls_a, 't -> j t', j = 20)
+      attn_cls = attention[0,:,:]
+      # average the cls_token attention and repeat across the frames
+      attn_cls_a = attn_cls.mean(dim=0)
+      attn_cls_a = repeat(attn_cls_a, 't -> j t', j = 20)
       self.attentions.append(attention)
 
     result = self.attentions[0]
@@ -218,7 +228,7 @@ model = torch.load('timesformer_model_big_20_epochs_2_classes_space_limited_2_2.
 # path_to_video = Path('example_data/74225/')
 # path_to_video.exists()
 
-loader_CP_test = np.load('data-arrays/dataset_CP_test_5_corrected.npz')
+loader_CP_test = np.load('data-arrays/dataset_NCP_test_5_corrected.npz')
 dataset_CP_test = loader_CP_test['arr_0']
 dataset_CP_test = dataset_CP_test.reshape(-1, 160, 128, 32)
 dataset_CP_test = dataset_CP_test[:, :, :, :, np.newaxis]
@@ -243,7 +253,7 @@ Create a `DividedAttentionRollout` object (`att_roll`) and call it to get a mask
 """
 dataset_new = loader_CP_test['arr_0']
 dataset_new = dataset_new.reshape(-1, 32, 128, 160)
-scan = 100 #60 #100
+scan = 42 #60 #100
 
 att_roll = DividedAttentionRollout(model)
 masks = att_roll(dataset_CP_test[scan])
@@ -254,7 +264,7 @@ masks = att_roll(dataset_CP_test[scan])
 masks = create_masks(list(rearrange(masks, 'h w t -> t h w')),dataset_new[scan]) 
 # cv2.imshow('img', np.hstack(np_imgs))
 # cv2.imshow('img2', np.hstack(masks))
-cv2.imwrite('images.jpg', np.hstack(dataset_new[scan]*255))
-cv2.imwrite('masks_method_3_sl.jpg', np.hstack(masks))
+cv2.imwrite('images_42_NCP_sl_thresh_combi.jpg', np.hstack(dataset_new[scan]*255))
+cv2.imwrite('masks_42_NCP_sl_thresh_combi.jpg', np.hstack(masks))
 
 print("done")
