@@ -1,5 +1,15 @@
+import os
+import cv2 as cv
 
 def delete_empty_image(path):
+    """
+        Deletes an image if the image does not contain any part of a lung.
+        An image is empty if there are no contours detected.
+        Args:
+            path (str): the path to the image
+        Returns:
+            None
+    """
     im = cv.imread(path)
     img = cv.cvtColor(im, cv.COLOR_BGR2GRAY)
 
@@ -10,6 +20,13 @@ def delete_empty_image(path):
         os.remove(path)
 
 def resize_all_images_512():
+    """
+        Resizes all images in the corrected CC-CCII dataset to size 512 x 512 by using linear interpolation
+        Args:
+            None
+        Returns:
+            None
+    """
     rootpath = './data/dataset_seg'
     labels = ['CP', 'NCP', 'Normal']
 
@@ -36,5 +53,3 @@ def resize_all_images_512():
                         down_width = img_size
                         img_resize = cv.resize(img, (down_width, down_width), interpolation= cv.INTER_LINEAR)
                         cv.imwrite(img_path, img_resize) 
-
- 

@@ -1,12 +1,11 @@
 import numpy as np
-import torch
-from torch.utils.data import TensorDataset
+# import torch
+# from torch.utils.data import TensorDataset
 
-# import tensorflow as tf
+import tensorflow as tf
 
-def load_dataset_train_valid(size, framework, classes):
-    # sizes: 'corrected' 'small' 'small_middle_part'
-    # framework: 'pytorch' 'tensorflow'
+def load_dataset_train_valid(size, classes):
+    # sizes: '160x128x32' '80x64x16-2nd' '80x64x16-mid'
     # classes: ['CP', 'NCP', 'Normal']
 
     data_train_list = []
@@ -15,13 +14,13 @@ def load_dataset_train_valid(size, framework, classes):
     label_valid_list = []
     
     for i, type in enumerate(classes):
-        loader_train = np.load('data-arrays/dataset_'+type+'_train_5_'+size+'.npz')
-        loader_valid = np.load('data-arrays/dataset_'+type+'_valid_5_'+size+'.npz')
+        loader_train = np.load('Data/dataset_'+type+'_train_'+size+'.npz')
+        loader_valid = np.load('Data/dataset_'+type+'_valid_'+size+'.npz')
 
         dataset_train = loader_train['arr_0'] 
         dataset_valid = loader_valid['arr_0']
 
-        if size in ['corrected']:
+        if size in ['160x128x32']:
             dataset_train = dataset_train.reshape(-1, 160, 128, 32)
             dataset_train = dataset_train[:, :, :, :, np.newaxis]
             dataset_train = dataset_train.reshape(-1, 1, 32, 128, 160)
@@ -30,7 +29,7 @@ def load_dataset_train_valid(size, framework, classes):
             dataset_valid = dataset_valid[:, :, :, :, np.newaxis]
             dataset_valid = dataset_valid.reshape(-1, 1, 32, 128, 160)
 
-        elif size in ['small', 'small_middle_part']:
+        elif size in ['80x64x16-2nd', '80x64x16-mid']:
             dataset_train = dataset_train.reshape(-1, 80, 64, 16)
             dataset_train = dataset_train[:, :, :, :, np.newaxis]
             dataset_train = dataset_train.reshape(-1, 1, 16, 64, 80)
@@ -65,26 +64,25 @@ def load_dataset_train_valid(size, framework, classes):
     return train_dataset, val_dataset
 
 
-def load_dataset_test(size, framework, classes):
-    # sizes: 'corrected' 'small' 'small_middle_part'
-    # framework: 'pytorch' 'tensorflow'
+def load_dataset_test(size, classes):
+    # sizes: '160x128x32' '80x64x16-2nd' '80x64x16-mid'
     # classes: ['CP', 'NCP', 'Normal']
 
     data_test_list = []
     label_test_list = []
     
     for i, type in enumerate(classes):
-        loader_test = np.load('data-arrays/dataset_'+type+'_test_5_'+size+'.npz')
+        loader_test = np.load('Data/dataset_'+type+'_test_'+size+'.npz')
 
         dataset_test = loader_test['arr_0'] 
 
-        if size in ['corrected']:
+        if size in ['160x128x32']:
             dataset_test = dataset_test.reshape(-1, 160, 128, 32)
             dataset_test = dataset_test[:, :, :, :, np.newaxis]
             dataset_test = dataset_test.reshape(-1, 1, 32, 128, 160)
             dataset_test = dataset_test.reshape(-1, 1, 1, 32, 128, 160)
 
-        elif size in ['small', 'small_middle_part']:
+        elif size in ['80x64x16-2nd', '80x64x16-mid']:
             dataset_test = dataset_test.reshape(-1, 80, 64, 16)
             dataset_test = dataset_test[:, :, :, :, np.newaxis]
             dataset_test = dataset_test.reshape(-1, 1, 16, 64, 80)
@@ -106,7 +104,7 @@ def load_dataset_test(size, framework, classes):
     return test_dataset
         
 
-def load_dataset_train_valid_test(size, framework, classes):
+def load_dataset_train_valid_test(size, classes):
     data_train_list = []
     data_valid_list = []
     data_test_list = []
@@ -119,15 +117,15 @@ def load_dataset_train_valid_test(size, framework, classes):
     label3class = [[1,0,0], [0,1,0], [0,0,1]]
     
     for i, type in enumerate(classes):
-        loader_train = np.load('data-arrays/dataset_'+type+'_train_5_'+size+'.npz')
-        loader_valid = np.load('data-arrays/dataset_'+type+'_valid_5_'+size+'.npz')
-        loader_test = np.load('data-arrays/dataset_'+type+'_test_5_'+size+'.npz')
+        loader_train = np.load('Data/dataset_'+type+'_train_'+size+'.npz')
+        loader_valid = np.load('Data/dataset_'+type+'_valid_'+size+'.npz')
+        loader_test = np.load('Data/dataset_'+type+'_test_'+size+'.npz')
 
         dataset_train = loader_train['arr_0'] 
         dataset_valid = loader_valid['arr_0']
         dataset_test = loader_test['arr_0']
 
-        if size in ['corrected']:
+        if size in ['160x128x32']:
             dataset_train = dataset_train.reshape(-1, 160, 128, 32)
             dataset_valid = dataset_valid.reshape(-1, 160, 128, 32)
             dataset_test = dataset_test.reshape(-1, 160, 128, 32)
@@ -137,7 +135,7 @@ def load_dataset_train_valid_test(size, framework, classes):
                 dataset_valid = dataset_valid[:, :, :, :, np.newaxis]
                 dataset_test = dataset_test[:, :, :, :, np.newaxis]
 
-        elif size in ['small', 'small_middle_part']:
+        elif size in ['80x64x16-2nd', '80x64x16-mid']:
             dataset_train = dataset_train.reshape(-1, 80, 64, 16)
             dataset_valid = dataset_valid.reshape(-1, 80, 64, 16)
             dataset_test = dataset_test.reshape(-1, 80, 64, 16)
@@ -175,8 +173,3 @@ def load_dataset_train_valid_test(size, framework, classes):
     test_dataset = tf.data.Dataset.from_tensor_slices((x_test, y_test))
 
     return train_dataset, val_dataset, test_dataset, x_train, x_val, x_test, y_train, y_val, y_test
-
-
-
-        
-

@@ -1,19 +1,4 @@
-torch==1.8.1
-torchvision==0.9.1
-torchvision               0.2.2   
-simplejson
-einops
-timm
-
-psutil
-scikit-learn
-opencv-python  pip install opencv-python-headless
-tensorboard
-
-pyyaml
-munch
-matplotlib
-
+### Setup environment timeSformer
 Step 1:
 conda create -n timesformer python=3.7 -y
 source activate timesformer
@@ -47,9 +32,7 @@ Step 8:
 select correct interpreter (the conda timesformer environment) in vscode
 
 Step 9:
-download TimeSformer_divST_8x32_224_k600.pyth
-
-
+clone repository TimeSformer https://github.com/facebookresearch/TimeSformer.git and add folders "timesformer" and "tools" to project
 # loader.py: -> put changes into train net
 # train_net:
 # test_net:
@@ -57,3 +40,22 @@ download TimeSformer_divST_8x32_224_k600.pyth
 # meters.py: ##### change from (1,5) def finalize_metrics(self, ks=(1, 2)):
 # meters.py: self.video_labels[vid_id] = labels #####[ind]
 # checkpoint.py: "cfg": cfg.dump(), ##### 
+
+Step 10:
+replace files train_net.py, test_net.py, vit.py, meters.py, checkpoint.py, loader.py
+
+Step 11:
+set path to TimeSformer_divST_8x32_224_k600.pyth
+set path to datasets
+
+Step 12:
+run timesformer_call.py
+
+
+### Setup environment DenseNet
+conda create -n densenet python=3.7 -y
+conda activate densenet
+
+pip install tensorflow
+pip install matplotlib
+pip install sklearn

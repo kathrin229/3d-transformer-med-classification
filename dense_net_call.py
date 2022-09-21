@@ -1,33 +1,32 @@
 import os
 import time
 import numpy as np
+
 import tensorflow as tf
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 
-from dense_net_2D import densenet
-from dense_net_3D import densenet3D
+from models.DenseNet.dense_net_2D import densenet2D
+from models.DenseNet.dense_net_3D import densenet3D
 
 from data_loading import load_dataset_train_valid_test
 
 start_time = time.time()
 
-size = 'small_middle_part'
-framework = 'tensorflow'
+size = '80x64x16-mid'
 classes = ['CP', 'NCP']
 n_classes = 2
-loss = 'binary_crossentropy' #'categorical_crossentropy' #
+loss = 'binary_crossentropy' # 'categorical_crossentropy'
 
-train_loader, validation_loader, test_loader, x_train, x_val, x_test, y_train, y_val, y_test = load_dataset_train_valid_test(size, framework, classes)
-# test_loader, x_test, y_test = load_dataset_test(size, framework, classes)
+train_loader, validation_loader, test_loader, x_train, x_val, x_test, y_train, y_val, y_test = load_dataset_train_valid_test(size, classes)
 
-model_type = 'densenet3D' # 'densenet3D
-model_name = "3d_densenet_2class_small_middle_batch_8"
+model_type = 'densenet3D' # 'densenet2D
+model_name = "3d_densenet_2class_small_middle_batch_16"
 
 patience_early_stopping = 15
-BATCH_SIZE = 8
-IMAGE_SIZE = [80, 64, 16, 1] #[160, 128, 32, 1] #
+BATCH_SIZE = 16
+IMAGE_SIZE = [80, 64, 16, 1] # [160, 128, 32, 1]
 EPOCHS = 50
 
 train_ds = (
@@ -60,7 +59,7 @@ checkpoint_cb = tf.keras.callbacks.ModelCheckpoint(model_name,
                                                     save_best_only=True)
 
 early_stopping_cb = tf.keras.callbacks.EarlyStopping(patience=patience_early_stopping,
-                                                     restore_best_weights=True)
+                                                        restore_best_weights=True)
 
 def exponential_decay(lr0, s):
     def exponential_decay_fn(epoch):
@@ -74,7 +73,7 @@ lr_scheduler = tf.keras.callbacks.LearningRateScheduler(exponential_decay_fn)
 if model_type in ['densenet3D']:
     model = densenet3D((IMAGE_SIZE[0], IMAGE_SIZE[1], IMAGE_SIZE[2], IMAGE_SIZE[3]), n_classes)
 elif model_type in ['densenet2D']:
-    model = densenet((IMAGE_SIZE[0], IMAGE_SIZE[1], IMAGE_SIZE[2]), n_classes)
+    model = densenet2D((IMAGE_SIZE[0], IMAGE_SIZE[1], IMAGE_SIZE[2]), n_classes)
 # model.summary()
 
 METRICS = [
@@ -95,7 +94,6 @@ steps_per_epoch=TRAIN_IMG_COUNT // BATCH_SIZE,
 epochs=EPOCHS,
 validation_data=val_ds,
 validation_steps=VAL_IMG_COUNT // BATCH_SIZE,
-# class_weight=class_weight,
 callbacks=[checkpoint_cb, early_stopping_cb, lr_scheduler]
 )
 

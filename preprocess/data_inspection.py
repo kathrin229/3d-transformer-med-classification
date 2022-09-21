@@ -1,8 +1,8 @@
 import os
 
-rootpath_CP = './data/dataset_seg/CP'
-rootpath_NCP = './data/dataset_seg/NCP'
-rootpath_Normal = './data/dataset_seg/Normal'
+rootpath_CP = '../dataset_seg/CP'
+rootpath_NCP = '../dataset_seg/NCP'
+rootpath_Normal = '../dataset_seg/Normal'
 
 list_CP = []
 list_NCP = []

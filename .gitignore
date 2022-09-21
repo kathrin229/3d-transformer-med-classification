@@ -136,15 +136,17 @@ dmypy.json
 dataset_seg.tar.gz
 data/**
 wget-log
+Data/
+Model_Files/
 
-# plots/**
-
+# file types
 *.npz
 *.h5
 *.pyth
 
+# timesformer
 timesformer/
 tools/
 configs/
-
+checkpoints/
 runs-kinetics
