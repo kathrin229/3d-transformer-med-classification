@@ -1,99 +1,74 @@
+"""
+Visualizing attention with rolled attention: https://github.com/yiyixuxu/TimeSformer-rolled-attention
+"""
 
-# export
 from pathlib import Path
 from timesformer.models.vit import *
 from timesformer.datasets import utils as utils
 from timesformer.config.defaults import get_cfg
 from einops import rearrange, repeat, reduce
-import cv2 #pip install opencv-python-headless
-# from google.colab.patches import cv2_imshow
+import cv2
 import torch
 import torchvision.transforms as transforms
 from PIL import Image
 import json
 import matplotlib.pyplot as plt
 
-"""# Utilities"""
-
-# export
-DEFAULT_MEAN = [0.45, 0.45, 0.45]
-DEFAULT_STD = [0.225, 0.225, 0.225]
-# convert video path to input tensor for model
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize(DEFAULT_MEAN,DEFAULT_STD),
-    transforms.Resize(224),
-    transforms.CenterCrop(224),
-])
-
-# convert the video path to input for cv2_imshow()
-transform_plot = transforms.Compose([
-    lambda p: #cv2.imread(str(p),cv2.IMREAD_GRAYSCALE),
-    transforms.ToTensor(),
-    # transforms.Resize(224),
-    # transforms.CenterCrop(224),
-    lambda x: rearrange(x*255, 'c h w -> h w c').numpy()
-])
-
-
-def get_frames(path_to_video, num_frames=8):
-  "return a list of paths to the frames of sampled from the video"
-  path_to_frames = list(path_to_video.iterdir())
-  path_to_frames.sort(key=lambda f: int(f.with_suffix('').name[-6:]))
-  assert num_frames <= len(path_to_frames), "num_frames can't exceed the number of frames extracted from videos"
-  if len(path_to_frames) == num_frames:
-    return(path_to_frames)
-  else:
-    video_length = len(path_to_frames)
-    seg_size = float(video_length - 1) / num_frames 
-    seq = []
-    for i in range(num_frames):
-      start = int(np.round(seg_size * i))
-      end = int(np.round(seg_size * (i + 1)))
-      seq.append((start + end) // 2)
-      path_to_frames_new = [path_to_frames[p] for p in seq]
-    return(path_to_frames_new)
-
-def create_video_input(path_to_video):
-  "create the input tensor for TimeSformer model"
-  path_to_frames = get_frames(path_to_video)
-  frames = [transform(cv2.imread(str(p), cv2.IMREAD_COLOR)) for p in path_to_frames]
-  frames = torch.stack(frames, dim=0)
-  frames = rearrange(frames, 't c h w -> c t h w')
-  frames = frames.unsqueeze(dim=0)
-  return(frames)
 
 def show_mask_on_image(img, mask):
-    img = np.stack((img,)*3, axis=-1)
-    # img = np.float32(img) / 255
-    mask = np.uint8(255 * mask)
-    max = mask.max()
-    min = mask.min()
-    thresh = max * 0.4
-
-    mask[mask < thresh] = 0
-    img = np.uint8(img*255)
-    
-    heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
-    # heatmap = np.float32(heatmap) / 255
-    # cam = heatmap + np.float32(img)
-    cam = heatmap + img
-    # cam = cam / np.max(cam)
-    # return np.uint8(255 * cam)
-    return cam
-    # return np.uint8(255 * heatmap)
-
+  """
+    Combining lung slice and heatmap, using a threshold of 0.8 of the maximum value on the heatmap
+    Args:
+        img (np.array): the lung slice image
+        mask (np.array): the attention mask
+    Returns:
+        cam (np.array): the combined lung slice image and heatmap
+        heatmap_orig (np.array): the heatmap without threshold
+        heatmap (np.array): the heatmap with threshold
+  """
+  img = np.stack((img,)*3, axis=-1)
+  mask = np.uint8(255 * mask)
+  max = mask.max()
+  min = mask.min()
+  thresh = max * 0.8
+  img = np.uint8(img*255)
+  heatmap = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
+  heatmap_orig = cv2.applyColorMap(mask, cv2.COLORMAP_JET)
+  heatmap[mask < thresh] = 0
+  cam = heatmap + img
+  return cam, heatmap_orig, heatmap
 
 def create_masks(masks_in, np_imgs):
+  """
+    Stacks masks of all lung slices.
+    Args:
+        masks_in (np.array): the attention masks
+        np_imgs (np.array): the lung slices
+    Returns:
+        masks (np.array): the combined lung slice images and heatmaps
+        heatmap_orig (np.array): the heatmaps without threshold
+        heatmap (np.array): the heatmaps with threshold
+  """
   masks = []
+  heatmaps_orig = []
+  heatmaps = []
   for mask, img in zip(masks_in, np_imgs):
     mask= cv2.resize(mask, (img.shape[1], img.shape[0]))
-    mask = show_mask_on_image(img, mask)
+    mask, heatmap_orig, heatmap = show_mask_on_image(img, mask)
     masks.append(mask)
-  return(masks)
+    heatmaps_orig.append(heatmap_orig)
+    heatmaps.append(heatmap)
+  return masks, heatmaps_orig, heatmaps
 
-# export
 def combine_divided_attention(attn_t, attn_s):
+  """
+    Stacks masks of all lung slices.
+    Args:
+        attn_t (list): time attentions
+        attn_s (list): space attentions
+    Returns:
+        attn_ts (list): combined space and time attentions
+  """
   ## time attention
     # average time attention weights across heads
   attn_t = attn_t.mean(dim = 1)
@@ -106,9 +81,9 @@ def combine_divided_attention(attn_t, attn_s):
   attn_t = attn_t / attn_t.sum(-1)[...,None]
 
   ## space attention
-   # average across heads
+  # average across heads
   attn_s = attn_s.mean(dim = 1)
-   # adding residual and renormalize 
+  # adding residual and renormalize 
   attn_s = attn_s +  torch.eye(attn_s.size(-1))[None,...]
   attn_s = attn_s / attn_s.sum(-1)[...,None]
   
@@ -116,12 +91,12 @@ def combine_divided_attention(attn_t, attn_s):
   attn_ts = einsum('tpk, ktq -> ptkq', attn_s, attn_t)
   
   ## average the cls_token attention across the frames
-   # splice out the attention for cls_token
+  # splice out the attention for cls_token
   attn_cls = attn_ts[0,:,:,:]
-   # average the cls_token attention and repeat across the frames
+  # average the cls_token attention and repeat across the frames
   attn_cls_a = attn_cls.mean(dim=0)
   attn_cls_a = repeat(attn_cls_a, 'p t -> j p t', j = 32)
-   # add it back
+  # add it back
   attn_ts = torch.cat([attn_cls_a.unsqueeze(0),attn_ts[1:,:,:,:]],0)
   return(attn_ts)
 
@@ -138,9 +113,9 @@ class DividedAttentionRollout():
   def remove_hooks(self): 
     for h in self.hooks: h.remove()
     
-  def __call__(self, path_to_video):
-    input_tensor = tensor_x_train = torch.Tensor(path_to_video) # create_video_input(path_to_video)
-    input_tensor = input_tensor.cuda(non_blocking=True)
+  def __call__(self, path_to_video, attention='dst'):
+    input_tensor = tensor_x_train = torch.Tensor(path_to_video)
+    # input_tensor = input_tensor.cuda(non_blocking=True)
     self.model.zero_grad()
     self.time_attentions = []
     self.space_attentions = []
@@ -153,82 +128,55 @@ class DividedAttentionRollout():
     preds = self.model(input_tensor)
     for h in self.hooks: h.remove()
 
-    # for attn_t,attn_s in zip(self.time_attentions, self.space_attentions):
-    #   self.attentions.append(combine_divided_attention(attn_t,attn_s))
-    # p,t = self.attentions[0].shape[0], self.attentions[0].shape[1]
-    # result = torch.eye(p*t)
-    # for attention in self.attentions:
-    #   attention = rearrange(attention, 'p1 t1 p2 t2 -> (p1 t1) (p2 t2)')
-    #   result = torch.matmul(attention, result)
-    # mask = rearrange(result, '(p1 t1) (p2 t2) -> p1 t1 p2 t2', p1 = p, p2=p)
-    # mask = mask.mean(dim=1)
-    # mask = mask[0,1:,:]
-    # width = int(mask.size(0)**0.5)
-    # mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
-    # mask = mask / np.max(mask)
-    # return(mask)
+    if attention in ['dst']:
+      for attn_t,attn_s in zip(self.time_attentions, self.space_attentions):
+        self.attentions.append(combine_divided_attention(attn_t,attn_s))
+      p,t = self.attentions[0].shape[0], self.attentions[0].shape[1]
+      result = torch.eye(p*t)
+      for attention in self.attentions:
+        attention = rearrange(attention, 'p1 t1 p2 t2 -> (p1 t1) (p2 t2)')
+        result = torch.matmul(attention, result)
+      mask = rearrange(result, '(p1 t1) (p2 t2) -> p1 t1 p2 t2', p1 = p, p2=p)
+      mask = mask.mean(dim=1)
+      mask = mask[0,1:,:]
+      width = int(mask.size(0)**0.5)
+      mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
+      mask = mask / np.max(mask)
+      return(mask)
 
+    elif attention in ['sl']:
+      for attention in self.space_attentions:
+        attention = attention.mean(dim = 1)
+        attention = attention +  torch.eye(attention.size(-1))[None,...]
+        attention = attention / attention.sum(-1)[...,None]
 
-    # NEW
-    for attention in self.space_attentions:
-      attention = attention.mean(dim = 1)
-      attention = attention +  torch.eye(attention.size(-1))[None,...]
-      attention = attention / attention.sum(-1)[...,None]
+        attn_cls = attention[0,:,:]
+        # average the cls_token attention and repeat across the frames
+        attn_cls_a = attn_cls.mean(dim=0)
+        attn_cls_a = repeat(attn_cls_a, 't -> j t', j = 20)
+        self.attentions.append(attention)
 
-      attn_cls = attention[0,:,:]
-      # average the cls_token attention and repeat across the frames
-      attn_cls_a = attn_cls.mean(dim=0)
-      attn_cls_a = repeat(attn_cls_a, 't -> j t', j = 20)
-      self.attentions.append(attention)
+      result = self.attentions[0]
+      for i in range(1,12):
+        result = torch.matmul(self.attentions[i], result)
 
-    result = self.attentions[0]
-    for i in range(1,12):
-      result = torch.matmul(self.attentions[i], result)
+      # mask = result.mean(dim=1)
+      mask = rearrange(result, 't p k -> p k t')
+      mask = mask[0,1:,:]
+      mask = rearrange(mask, '(t n) x -> (n x) t', n = 4)
+      width = int(mask.size(0)**0.5)
+      mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
+      mask = mask / np.max(mask)
+      return(mask)
 
-    # mask = result.mean(dim=1)
-    mask = rearrange(result, 't p k -> p k t')
-    mask = mask[0,1:,:]
-    mask = rearrange(mask, '(t n) x -> (n x) t', n = 4)
-    width = int(mask.size(0)**0.5)
-    mask = rearrange(mask, '(h w) t -> h w t', w = width).numpy()
-    mask = mask / np.max(mask)
-    return(mask)
-    
+torch.cuda.empty_cache()
+model = torch.load('Model_Files/timesformer_dst_3class_160x128x32.pt',map_location='cpu')
 
+loader_CP_test = np.load('Data/dataset_NCP_test_160x128x32.npz')
 
+cat = 'NCP'
+attention = 'sl'
 
-"""# load the pretrained model
-
-download the pre-trainde model
-"""
-
-# ! wget https://dl.dropboxusercontent.com/s/tybhuml57y24wpm/TimeSformer_divST_8_224_SSv2.pyth
-
-"""load the model"""
-# model = torch.load('timesformer_big_data_15_epochs_3_classes.pt')
-model = torch.load('timesformer_model_big_20_epochs_2_classes_space_limited_2_2.pt')
-#timesformer_model_big_20_epochs_2_classes_space_limited_2_2.pt
-# model_file = '/content/TimeSformer/TimeSformer_divST_8_224_SSv2.pyth'
-# Path(model_file).exists()
-
-# cfg = get_cfg()
-# cfg.merge_from_file('configs/SSv2/TimeSformer_divST_8_224.yaml')
-# cfg.TRAIN.ENABLE = False
-# cfg.TIMESFORMER.PRETRAINED_MODEL = model_file
-# model = MODEL_REGISTRY.get('vit_base_patch16_224')(cfg)
-
-"""read the labels"""
-
-# with open('example_data/labels.json') as f:
-#   ssv2_labels = json.load(f)
-# ssv2_labels = list(ssv2_labels.keys())
-
-"""inference"""
-
-# path_to_video = Path('example_data/74225/')
-# path_to_video.exists()
-
-loader_CP_test = np.load('data-arrays/dataset_NCP_test_5_corrected.npz')
 dataset_CP_test = loader_CP_test['arr_0']
 dataset_CP_test = dataset_CP_test.reshape(-1, 160, 128, 32)
 dataset_CP_test = dataset_CP_test[:, :, :, :, np.newaxis]
@@ -236,35 +184,16 @@ dataset_CP_test = dataset_CP_test.reshape(-1, 1, 32, 128, 160)
 dataset_CP_test = dataset_CP_test[:, :, :, :, np.newaxis]
 dataset_CP_test = dataset_CP_test.reshape(-1, 1, 1, 32, 128, 160)
 
-# with torch.set_grad_enabled(False):
-#   np.random.seed(cfg.RNG_SEED)
-#   torch.manual_seed(cfg.RNG_SEED)
-#   model.eval();
-#   pred = model(create_video_input(path_to_video)).cpu().detach()
-
-# topk_scores, topk_label = torch.topk(pred, k=5, dim=-1)
-# for i in range(5):
-#   pred_name = ssv2_labels[topk_label.squeeze()[i].item()]
-#   print(f"Prediction index {i}: {pred_name:<25}, score: {topk_scores.squeeze()[i].item():.3f}")
-
-"""# visualizing the learned space-time attention
-
-Create a `DividedAttentionRollout` object (`att_roll`) and call it to get a mask for a given video
-"""
 dataset_new = loader_CP_test['arr_0']
 dataset_new = dataset_new.reshape(-1, 32, 128, 160)
-scan = 42 #60 #100
+scan = 11
 
 att_roll = DividedAttentionRollout(model)
-masks = att_roll(dataset_CP_test[scan])
+masks = att_roll(dataset_CP_test[scan], attention=attention)
 
-"""plot"""
-
-# np_imgs = [transform_plot(p) for p in get_frames(dataset_new[0])]
-masks = create_masks(list(rearrange(masks, 'h w t -> t h w')),dataset_new[scan]) 
-# cv2.imshow('img', np.hstack(np_imgs))
-# cv2.imshow('img2', np.hstack(masks))
-cv2.imwrite('images_42_NCP_sl_thresh_combi.jpg', np.hstack(dataset_new[scan]*255))
-cv2.imwrite('masks_42_NCP_sl_thresh_combi.jpg', np.hstack(masks))
+masks, heatmap_orig, heatmap = create_masks(list(rearrange(masks, 'h w t -> t h w')),dataset_new[scan]) 
+cv2.imwrite('img/visual_images_'+str(scan)+'_'+cat+'_v.jpg', np.vstack(dataset_new[scan]*255))
+cv2.imwrite('img/visual_masks_'+str(scan)+'_'+cat+'_'+attention+'_thresh_08_v.jpg', np.vstack(masks))
+cv2.imwrite('img/visual_heatmap_orig_'+str(scan)+'_'+cat+'_'+attention+'_thresh_08_v.jpg', np.vstack(heatmap_orig))
 
 print("done")

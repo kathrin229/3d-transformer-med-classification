@@ -1,20 +1,25 @@
+"""
+Creating two smaller datasets from preprocessed CC-CCII dataset size 160x128x64:
+The image size and the number of samples are reduced by half.
+The dataset 80x64x16-mid takes the 16 slices in the middle of each scan for downsampling.
+The dataset 80x64x16-mid takes every second slice of each scan for downsampling.
+"""
+
 import numpy as np
 import cv2 as cv
 import matplotlib.pyplot as plt
-from bounding_box import find_bounding_box_size
-from data_preprocessing_functions import crop_bounding_box_and_resize
 
-loader_CP_train = np.load('../Data/dataset_CP_train_160x128x32.npz')
-loader_NCP_train = np.load('../Data/dataset_NCP_train_160x128x32.npz')
-loader_Normal_train = np.load('../Data/dataset_Normal_train_160x128x32.npz')
+loader_CP_train = np.load('Data/dataset_CP_train_160x128x32.npz')
+loader_NCP_train = np.load('Data/dataset_NCP_train_160x128x32.npz')
+loader_Normal_train = np.load('Data/dataset_Normal_train_160x128x32.npz')
 
-loader_CP_valid = np.load('../Data/dataset_CP_valid_160x128x32.npz')
-loader_NCP_valid = np.load('../Data/dataset_NCP_valid_160x128x32.npz')
-loader_Normal_valid = np.load('../Data/dataset_Normal_valid_160x128x32.npz')
+loader_CP_valid = np.load('Data/dataset_CP_valid_160x128x32.npz')
+loader_NCP_valid = np.load('Data/dataset_NCP_valid_160x128x32.npz')
+loader_Normal_valid = np.load('Data/dataset_Normal_valid_160x128x32.npz')
 
-loader_CP_test = np.load('../Data/dataset_CP_test_160x128x32.npz')
-loader_NCP_test = np.load('../Data/dataset_NCP_test_160x128x32.npz')
-loader_Normal_test = np.load('../Data/dataset_Normal_test_160x128x32.npz')
+loader_CP_test = np.load('Data/dataset_CP_test_160x128x32.npz')
+loader_NCP_test = np.load('Data/dataset_NCP_test_160x128x32.npz')
+loader_Normal_test = np.load('Data/dataset_Normal_test_160x128x32.npz')
 
 dataset_CP_train = loader_CP_train['arr_0']
 dataset_NCP_train = loader_NCP_train['arr_0']
@@ -59,8 +64,8 @@ for dataset, dataset_name in zip(datasets, dataset_names):
     print(dataset_name)
 
     if SAMPLING == '2ND':
-        np.savez_compressed('../Data/%s_80x64x16-2nd.npz' % dataset_name, dataset_new)
+        np.savez_compressed('Data/%s_80x64x16-2nd.npz' % dataset_name, dataset_new)
     elif SAMPLING == 'MID':
-        np.savez_compressed('../Data/%s_80x64x16-mid.npz' % dataset_name, dataset_new)
+        np.savez_compressed('Data/%s_80x64x16-mid.npz' % dataset_name, dataset_new)
 
 print('done')

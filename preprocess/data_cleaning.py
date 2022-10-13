@@ -1,3 +1,7 @@
+"""
+Cleaning functions for the Clean CC-CCII Dataset https://github.com/wang-shihao/HKBU_HPML_COVID-19
+Deleting empty images, resizing all images to the same size.
+"""
 import os
 import cv2 as cv
 

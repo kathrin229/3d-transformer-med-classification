@@ -1,12 +1,24 @@
-import numpy as np
-# import torch
-# from torch.utils.data import TensorDataset
+"""
+Data loading functions for TimeSformer and DenseNet
+Put imports in #comments that are not needed for the model (use either tensorflow or pytorch imports)
+"""
 
-import tensorflow as tf
+import numpy as np
+import torch
+from torch.utils.data import TensorDataset
+
+# import tensorflow as tf
 
 def load_dataset_train_valid(size, classes):
-    # sizes: '160x128x32' '80x64x16-2nd' '80x64x16-mid'
-    # classes: ['CP', 'NCP', 'Normal']
+    """
+    Loading training and validation dataset for TimeSformer (pytorch)
+    Args:
+        size (str): the dataset size - '160x128x32', '80x64x16-2nd' or '80x64x16-mid'
+        classes ([str]): a list of classes that should be considered out of ['CP', 'NCP', 'Normal']
+    Returns:
+        train_dataset (torch.TensorDataset): the dataset for training
+        val_dataset (torch.TensorDataset): the dataset for validation
+    """
 
     data_train_list = []
     data_valid_list = []
@@ -65,8 +77,14 @@ def load_dataset_train_valid(size, classes):
 
 
 def load_dataset_test(size, classes):
-    # sizes: '160x128x32' '80x64x16-2nd' '80x64x16-mid'
-    # classes: ['CP', 'NCP', 'Normal']
+    """
+    Loading test dataset for TimeSformer (pytorch)
+    Args:
+        size (str): the dataset size - '160x128x32', '80x64x16-2nd' or '80x64x16-mid'
+        classes ([str]): a list of classes that should be considered out of ['CP', 'NCP', 'Normal']
+    Returns:
+        test_dataset (torch.TensorDataset): the dataset for testing
+    """
 
     data_test_list = []
     label_test_list = []
@@ -105,6 +123,22 @@ def load_dataset_test(size, classes):
         
 
 def load_dataset_train_valid_test(size, classes):
+    """
+    Loading training, validation and test dataset for DenseNet (tf/keras)
+    Args:
+        size (str): the dataset size - '160x128x32', '80x64x16-2nd' or '80x64x16-mid'
+        classes ([str]): a list of classes that should be considered out of ['CP', 'NCP', 'Normal']
+    Returns:
+        train_dataset (tf.data.Dataset): the dataset for training
+        val_dataset (tf.data.Dataset): the dataset for validation
+        test_dataset (tf.data.Dataset): the dataset for testing
+        x_train (np.array): array containing x values for training
+        x_val (np.array): array containing x values for validation
+        x_test (np.array): array containing x values for testing
+        y_train (np.array): array containing y values for training
+        y_val (np.array): array containing y values for validation
+        y_test (np.array): array containing y values for testing
+    """
     data_train_list = []
     data_valid_list = []
     data_test_list = []

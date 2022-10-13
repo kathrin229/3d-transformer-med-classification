@@ -1,14 +1,19 @@
+"""
+Creating an input dataset from the Clean CC-CCII Dataset https://github.com/wang-shihao/HKBU_HPML_COVID-19
+Training, validation and test set are saved as .npz files separately for every class
+"""
+
 import os
 import cv2
 import random
 import numpy as np
 
-from data_preprocessing_functions import stack_2D_images
-from data_preprocessing_functions import correct_datasets
+from data_preprocessing import stack_2D_images
+from data_preprocessing import correct_datasets
 
-rootpath_CP = '../dataset_seg/CP'
-rootpath_NCP = '../dataset_seg/NCP'
-rootpath_Normal = '../dataset_seg/Normal'
+rootpath_CP = 'dataset_seg/CP'
+rootpath_NCP = 'dataset_seg/NCP'
+rootpath_Normal = 'dataset_seg/Normal'
 
 NUM_SLICES_PER_SCAN = 32
 WINDOW_W = 480
@@ -16,12 +21,12 @@ WINDOW_H = 384
 FINAL_W = 160
 FINAL_H = 128
 
-PERCENT_TRAIN = 0.60 # 0.65
-PERCENT_VALID = 0.15 # 0.20
+PERCENT_TRAIN = 0.60
+PERCENT_VALID = 0.15
 PERCENT_TEST = 0.25
 
-PERCENT_TRAIN_CP = 0.40 # 0.65
-PERCENT_VALID_CP = 0.15 # 0.20
+PERCENT_TRAIN_CP = 0.40
+PERCENT_VALID_CP = 0.15
 PERCENT_TEST_CP = 0.45
 
 list_CP_train = []
@@ -142,16 +147,16 @@ datasets = [dataset_CP_train, dataset_NCP_train, dataset_Normal_train,
 dataset_list, discard_list = correct_datasets(datasets, FINAL_W, FINAL_H)
 print(sum(discard_list))
 
-np.savez_compressed('../Data/dataset_CP_train_160x128x32', dataset_list[0])
-np.savez_compressed('../Data/dataset_NCP_train_160x128x32', dataset_list[1])
-np.savez_compressed('../Data/dataset_Normal_train_160x128x32', dataset_list[2])
+np.savez_compressed('Data/dataset_CP_train_160x128x32', dataset_list[0])
+np.savez_compressed('Data/dataset_NCP_train_160x128x32', dataset_list[1])
+np.savez_compressed('Data/dataset_Normal_train_160x128x32', dataset_list[2])
 
-np.savez_compressed('../Data/dataset_CP_valid_160x128x32', dataset_list[3])
-np.savez_compressed('../Data/dataset_NCP_valid_160x128x32', dataset_list[4])
-np.savez_compressed('../Data/dataset_Normal_valid_160x128x32', dataset_list[5])
+np.savez_compressed('Data/dataset_CP_valid_160x128x32', dataset_list[3])
+np.savez_compressed('Data/dataset_NCP_valid_160x128x32', dataset_list[4])
+np.savez_compressed('Data/dataset_Normal_valid_160x128x32', dataset_list[5])
 
-np.savez_compressed('../Data/dataset_CP_test_160x128x32', dataset_list[6])
-np.savez_compressed('../Data/dataset_NCP_test_160x128x32', dataset_list[7])
-np.savez_compressed('../Data/dataset_Normal_test_160x128x32', dataset_list[8])
+np.savez_compressed('Data/dataset_CP_test_160x128x32', dataset_list[6])
+np.savez_compressed('Data/dataset_NCP_test_160x128x32', dataset_list[7])
+np.savez_compressed('Data/dataset_Normal_test_160x128x32', dataset_list[8])
 
 print('done')

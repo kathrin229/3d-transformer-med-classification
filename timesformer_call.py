@@ -1,3 +1,7 @@
+"""
+Training and testing TimeSformer models
+"""
+
 import yaml
 from munch import munchify
 from tools.train_net import train
@@ -8,7 +12,7 @@ from data_loading import load_dataset_train_valid, load_dataset_test
 import time
 
 
-## Config oriented at timesformer/config/defaults.py
+## Config oriented at timesformer/config/defaults.py from https://github.com/facebookresearch/TimeSformer
 config = yaml.safe_load("""
 FRAMEWORK: 'pytorch'
 TRAIN:
@@ -38,7 +42,9 @@ DATA:
     SIZE: '160x128x32'
 TIMESFORMER:
     ATTENTION_TYPE: 'time_limited'
+    
 MODEL:
+    PRETRAINED_MODEL_NAME: 'Model_Files/TimeSformer_divST_8x32_224_K600.pyth'
     MODEL_NAME: 'timesformer_tl_2class_160x128x32.pt'
     NUM_CLASSES: 2
     ARCH: vit

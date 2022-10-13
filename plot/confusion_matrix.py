@@ -1,3 +1,7 @@
+"""
+Visualizing confusion matrix as a plot
+"""
+
 import seaborn as sn
 import pandas as pd
 import matplotlib.pyplot as plt

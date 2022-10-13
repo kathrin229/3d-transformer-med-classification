@@ -1,4 +1,7 @@
-# Code modified from https://towardsdatascience.com/creating-densenet-121-with-tensorflow-edbc08a956d8
+"""
+Creating a 2D DenseNet 121
+Code modified from https://towardsdatascience.com/creating-densenet-121-with-tensorflow-edbc08a956d8
+"""
 
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Conv2D, BatchNormalization, Dense
@@ -16,12 +19,12 @@ def densenet2D(input_shape, n_classes, filters=32):
             n_classes (int): The number of classes to be predicted.
             filters (int): number of filters, optional
         Returns:
-            model (tf.keras.models.Model): The 3D Densenet121 model
+            model (tf.keras.models.Model): The 2D Densenet121 model
     """
     def bn_rl_conv(x, filters, kernel=1, strides=1):
         x = BatchNormalization()(x)
         x = ReLU()(x)
-        x = Conv2D(filters, kernel, strides=strides,padding = 'same')(x)
+        x = Conv2D(filters, kernel, strides=strides, padding = 'same')(x)
         return x
     
     def dense_block(x, repetition):

@@ -1,3 +1,7 @@
+"""
+Training and testing DenseNet models
+"""
+
 import os
 import time
 import numpy as np
@@ -74,7 +78,7 @@ if model_type in ['densenet3D']:
     model = densenet3D((IMAGE_SIZE[0], IMAGE_SIZE[1], IMAGE_SIZE[2], IMAGE_SIZE[3]), n_classes)
 elif model_type in ['densenet2D']:
     model = densenet2D((IMAGE_SIZE[0], IMAGE_SIZE[1], IMAGE_SIZE[2]), n_classes)
-# model.summary()
+model.summary(print_fn=myprint)
 
 METRICS = [
     'accuracy',

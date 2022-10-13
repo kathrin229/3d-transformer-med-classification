@@ -1,3 +1,7 @@
+"""
+Pre-processing functions for the Clean CC-CCII Dataset https://github.com/wang-shihao/HKBU_HPML_COVID-19
+"""
+
 import os
 import random
 import cv2 as cv
@@ -5,7 +9,7 @@ import numpy as np
 
 def find_biggest_bounding_box_in_img(path):
     """
-        ## exploration: Find biggest bounding box in dataset
+        For exploration: Find biggest bounding box around lung in dataset
         Args:
             path (str): the path to the image
         Returns:
@@ -47,7 +51,7 @@ def find_biggest_bounding_box_in_img(path):
 
 def find_bounding_box_size(img, width, height):
     """
-        ## detect bounding box in image
+        Detect bounding box in image
         Args:
             img (np.array): the image
             width (int): the width of the image
@@ -88,7 +92,7 @@ def find_bounding_box_size(img, width, height):
 
 def resize_crop(img_path):
     """
-        ## resize image and crop (technique from paper, not used)
+        Resize image and crop (technique from paper https://www.medrxiv.org/content/10.1101/2020.06.08.20125963v2)
         Args:
             img_path (str): path to the image to resize and crop
         Returns:
@@ -102,8 +106,8 @@ def resize_crop(img_path):
 
 def get_crop_position(path, list_dir_small, window_w, window_h):
     """
-        ## determine position to crop scan:
-        #  all images of one scan should be cropped at the same position to maintain the physiological properties of the 3D lung.
+        Determine position to crop scan for different crop and resize method with bounding box.
+        All images of one scan should be cropped at the same position to maintain the physiological properties of the 3D lung.
         Args:
             path (str): path to the image to resize and crop
             list_dir_small (str): directory leading to the folder where all scan images are located
@@ -149,7 +153,7 @@ def get_crop_position(path, list_dir_small, window_w, window_h):
 
 def crop_bounding_box_and_resize(img_path, window_w, window_h, img_w, img_h, window_x, window_y): #480 354
     """
-        ## crop image at bounding box and resize (new strategy, used)
+        Crops image at bounding box and resizes image (new strategy)
         Args:
             img_path (str): path to the image to resize and crop
             window_w (int): width of bounding box window
@@ -172,7 +176,7 @@ def crop_bounding_box_and_resize(img_path, window_w, window_h, img_w, img_h, win
 
 def random_down_sampling(list_dir, num_samples):
     """
-        ## paper strategy 1 (not used): choose random images from scan to sample scan
+        Paper strategy 1 (not used): choose random images from scan to sample scan
         Args:
             list_dir ([str]): list of directories
             num_samples (int): number of images to be sampled
@@ -187,7 +191,7 @@ def random_down_sampling(list_dir, num_samples):
 
 def symmetrical_down_sampling(list_dir, num_samples):
     """
-        ## paper strategy 2 (used). Corrected version of strategy described in pseudocode
+        Paper strategy 2 (used). Corrected version of strategy described in pseudocode
         Args:
             list_dir ([str]): list of directories
             num_samples (int): number of images to be sampled
@@ -210,7 +214,7 @@ def symmetrical_down_sampling(list_dir, num_samples):
 
 def stack_2D_images(path, list_dir, sampling, num_samples, window_w, window_h, img_w, img_h):
     """
-        ## creating 3D ct scans
+        Creates 3D ct scans by using sampling and cropping methods
         Args:
             path (str): path to the scan to stack images together
             list_dir ([str]): a list containing all image file names of the scan
@@ -252,7 +256,7 @@ def stack_2D_images(path, list_dir, sampling, num_samples, window_w, window_h, i
 
 def correct_datasets(dataset_list, img_w, img_h):
     """
-        ## detects faulty scans
+        Detects faulty scans in the created dataset
         Args:
             dataset_list ([np.array]): list of 3D arrays (images)
             img_w (int): width of the image
@@ -272,8 +276,6 @@ def correct_datasets(dataset_list, img_w, img_h):
             h_first = 0
             for idx, img in enumerate(scan):
 
-                # x, y, w, h = find_bounding_box_size(img, 118, 160)
-                # x, y, w, h = find_bounding_box_size(img, 160, 128)
                 x, y, w, h = find_bounding_box_size(img, img_w, img_h)
 
                 if idx == 0:
@@ -283,22 +285,17 @@ def correct_datasets(dataset_list, img_w, img_h):
                 # if box in last slice smaller than box in first slice: lung is reverse, discard
                 if idx == len(scan)-1 and w < w_first and h < h_first and discard == False:
                     discard = True
-                    # print(str(number) + ": discard")
                     num_discard +=1
 
                 # increasing during the first quater of the lung: 32/6
                 if idx < int(len(scan)/5) and w < w_check - threshold and discard == False:
-                # if idx <= 5 and w < w_check -2 and discard == False:
                     discard = True
-                    # print(str(number) + ": discard")
                     num_discard +=1
                 w_check = w
 
                 # slice similar to beginning's slices width in the middle
                 if idx > int(len(scan)/4) and idx < len(scan) - int(len(scan)/4) and w < int(img_h/1.7) and discard == False:
-                # if idx > 8 and idx <= 24 and w < 90 and discard == False:
                     discard = True
-                    # print(str(number) + ": discard")
                     num_discard +=1
             if discard:
                 scan_d_list.append(scan_idx)

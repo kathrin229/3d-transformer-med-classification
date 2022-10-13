@@ -124,37 +124,44 @@ class Block(nn.Module):
             return x
 
         if self.attention_type == 'space_limited':
+            num_p_w = 5 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_h = 4 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_all = 20 # number of patch blocks in total: 20 for 2x2 patch blocks, 4 for 5x4 patch blocks
+            p_w = 2 # patch width
+            p_h = 2 # patch height
+
             xt = x[:,1:,:]
             xt = rearrange(xt, 'b (h w t) m -> b h w t m',b=B,h=H,w=W,t=T)
-            xt = rearrange(xt, 'b (h1 h) (w1 w) t m -> (b h1 w1) (h w t) m',b=B,t=T, h1=4, w1=5) #h1=4, w1=5
-            # xt = rearrange(xt, 'b (h w t) m -> (b t) (h w) m',b=B,h=H,w=W,t=T)
+            xt = rearrange(xt, 'b (h1 h) (w1 w) t m -> (b h1 w1) (h w t) m',b=B,t=T, h1=num_p_h, w1=num_p_w)
 
             # new
             init_cls_token = x[:,0,:].unsqueeze(1)
-            cls_token = init_cls_token.repeat(1, 20, 1) #(2x2)
-            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=20).unsqueeze(1) #(2x2)
+            cls_token = init_cls_token.repeat(1, num_p_all, 1) #(2x2)
+            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=num_p_all).unsqueeze(1) #(2x2)
             xt = torch.cat((cls_token, xt), 1)
             res_temporal = self.drop_path(self.attn(self.norm1(xt)))
 
             cls_token = res_temporal[:,0,:]
-            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=20) #(2x2)
-            cls_token = torch.mean(cls_token,1,True) ## averaging for every stick
+            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=num_p_all) #(2x2)
+            cls_token = torch.mean(cls_token,1,True) ## averaging for every patch block
 
             res_temporal = res_temporal[:,1:,:]
-            res_temporal = rearrange(res_temporal, '(b h1 w1) (h w t) m -> b (h1 h) (w1 w) t m',b=B,t=T, h1=4, w1=5,h=2,w=2)
+            res_temporal = rearrange(res_temporal, '(b h1 w1) (h w t) m -> b (h1 h) (w1 w) t m',b=B,t=T, h1=num_p_h, w1=num_p_w,h=p_h,w=p_w)
             res_temporal = rearrange(res_temporal, 'b h w t m -> b (h w t) m ',b=B,h=H,w=W,t=T)
-            # res_temporal = rearrange(res_temporal, '(b t) (h w) m -> b (h w t) m',b=B,h=H,w=W,t=T)
 
             x = x + torch.cat((cls_token, res_temporal), 1)
             x = x + self.drop_path(self.mlp(self.norm2(x)))
             return x
 
         elif self.attention_type == 'time_limited':
+            p_size = 8 # the size of a patch block (in time direction) / the number of slices considered together
+            num_p = 4 # number of patch blocks in total: 4 when taking every 8 slices together
+
             init_cls_token = x[:,0,:].unsqueeze(1)
-            cls_token = init_cls_token.repeat(1, 4, 1) #taking 8 slices together
-            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=4).unsqueeze(1)
+            cls_token = init_cls_token.repeat(1, num_p, 1) #taking 8 slices together
+            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=num_p).unsqueeze(1)
             xs = x[:,1:,:]
-            xs = rearrange(xs, 'b (h w t1 t) m -> (b t1) (h w t) m',b=B,h=H,w=W,t=8,t1=4)
+            xs = rearrange(xs, 'b (h w t1 t) m -> (b t1) (h w t) m',b=B,h=H,w=W,t=p_size,t1=num_p)
             xs = torch.cat((cls_token, xs), 1)
             res_spatial = self.drop_path(self.attn(self.norm1(xs)))
 
@@ -163,35 +170,43 @@ class Block(nn.Module):
             cls_token = torch.mean(cls_token,1,True) ## averaging for every frame
 
             res_spatial = res_spatial[:,1:,:]
-            res_spatial = rearrange(res_spatial, '(b t1) (h w t) m -> b (h w t1 t) m',b=B,h=H,w=W,t=8,t1=4)
+            res_spatial = rearrange(res_spatial, '(b t1) (h w t) m -> b (h w t1 t) m',b=B,h=H,w=W,t=p_size,t1=num_p)
             res = res_spatial
 
-            x = x + torch.cat((cls_token, res), 1) # !!! x +
+            x = x + torch.cat((cls_token, res), 1)
             x = x + self.drop_path(self.mlp(self.norm2(x)))
             return x
 
         elif self.attention_type == 'space_and_time_limited':
+            num_p_w = 5 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_h = 4 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_all = 80 # number of patch blocks in total: 4 times 5 times 4 patch blocks
+            p_w = 2 # patch width
+            p_h = 2 # patch height
+            p_t = 8 # the size of a patch block (in time direction) / the number of slices considered together
+            num_p_t = 4 # number of patch blocks in time direction: 4 when taking every 8 slices together
+
             init_cls_token = x[:,0,:].unsqueeze(1)
-            cls_token = init_cls_token.repeat(1, 80, 1) # 16 cubes
+            cls_token = init_cls_token.repeat(1, num_p_all, 1)
             cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=80).unsqueeze(1)
             xs = x[:,1:,:]
-            xs = rearrange(xs, 'b (h1 h w1 w t1 t) m -> b (h1 h) (w1 w) (t1 t) m', b=B,h=2,w=2,t=8,h1=4,w1=5,t1=4)
-            xs = rearrange(xs, 'b (h1 h) (w1 w) (t1 t) m -> (b h1 w1 t1) (h w t) m', b=B,h=2,w=2,t=8,h1=4,w1=5,t1=4)
+            xs = rearrange(xs, 'b (h1 h w1 w t1 t) m -> b (h1 h) (w1 w) (t1 t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
+            xs = rearrange(xs, 'b (h1 h) (w1 w) (t1 t) m -> (b h1 w1 t1) (h w t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
             xs = torch.cat((cls_token, xs), 1)
             res_spatial = self.drop_path(self.attn(self.norm1(xs)))
 
             ### Taking care of CLS token
             cls_token = res_spatial[:,0,:]
-            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=80)
+            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=num_p_all)
             cls_token = torch.mean(cls_token,1,True) ## averaging for every frame
 
             res_spatial = res_spatial[:,1:,:]
-            res_spatial = rearrange(res_spatial, '(b h1 w1 t1) (h w t) m -> b (h1 h) (w1 w) (t1 t) m', b=B,h=2,w=2,t=8,h1=4,w1=5,t1=4)
-            res_spatial = rearrange(res_spatial, 'b (h1 h) (w1 w) (t1 t) m -> b (h1 h w1 w t1 t) m', b=B,h=2,w=2,t=8,h1=4,w1=5,t1=4)
+            res_spatial = rearrange(res_spatial, '(b h1 w1 t1) (h w t) m -> b (h1 h) (w1 w) (t1 t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
+            res_spatial = rearrange(res_spatial, 'b (h1 h) (w1 w) (t1 t) m -> b (h1 h w1 w t1 t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
             res = res_spatial
 
             ## Mlp
-            x = x + torch.cat((cls_token, res), 1) # !!! x +
+            x = x + torch.cat((cls_token, res), 1)
             x = x + self.drop_path(self.mlp(self.norm2(x)))
             return x
 

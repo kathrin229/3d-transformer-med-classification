@@ -1,3 +1,7 @@
+"""
+Some basic inspection of the Clean CC-CCII Dataset https://github.com/wang-shihao/HKBU_HPML_COVID-19
+Counting scans in each class, number of patients, number of slices per scan
+"""
 import os
 
 rootpath_CP = '../dataset_seg/CP'

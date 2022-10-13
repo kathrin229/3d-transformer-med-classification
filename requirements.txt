@@ -33,13 +33,7 @@ select correct interpreter (the conda timesformer environment) in vscode
 
 Step 9:
 clone repository TimeSformer https://github.com/facebookresearch/TimeSformer.git and add folders "timesformer" and "tools" to project
-# loader.py: -> put changes into train net
-# train_net:
-# test_net:
-# vit.py: new approach
-# meters.py: ##### change from (1,5) def finalize_metrics(self, ks=(1, 2)):
-# meters.py: self.video_labels[vid_id] = labels #####[ind]
-# checkpoint.py: "cfg": cfg.dump(), ##### 
+replace train_net, test_net, vit.py, meters.py, checkpoint.py
 
 Step 10:
 replace files train_net.py, test_net.py, vit.py, meters.py, checkpoint.py, loader.py

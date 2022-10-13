@@ -520,7 +520,7 @@ def train(cfg):
 
 
 def create_model(cfg):
-    model_file = Path('Model_Files/TimeSformer_divST_8x32_224_K600-2.pyth')
+    model_file = Path(cfg.MODEL.PRETRAINED_MODEL_NAME)
     model_file.exists()
     model_orig = TimeSformer(img_size=224, num_classes=600, num_frames=32, attention_type=cfg.TIMESFORMER.ATTENTION_TYPE,  pretrained_model=str(model_file))
     # num_frames=16 / 32
