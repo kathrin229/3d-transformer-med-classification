@@ -4,7 +4,7 @@ conda create -n timesformer python=3.7 -y
 source activate timesformer
 
 Step 2:
-conda install pytorch=1.8.1 torchvision=0.9.1 cudatoolkit=10.2 -c pytorch   THIS WORKS!!!
+conda install pytorch=1.8.1 torchvision=0.9.1 cudatoolkit=10.2 -c pytorch
 
 Step 3:
 pip install 'git+https://github.com/facebookresearch/fvcore'
@@ -33,16 +33,13 @@ select correct interpreter (the conda timesformer environment) in vscode
 
 Step 9:
 clone repository TimeSformer https://github.com/facebookresearch/TimeSformer.git and add folders "timesformer" and "tools" to project
-replace train_net, test_net, vit.py, meters.py, checkpoint.py
+replace train_net, test_net, vit.py, meters.py, checkpoint.py with the ones in this repository
 
 Step 10:
-replace files train_net.py, test_net.py, vit.py, meters.py, checkpoint.py, loader.py
-
-Step 11:
 set path to TimeSformer_divST_8x32_224_k600.pyth
 set path to datasets
 
-Step 12:
+Step 11:
 run timesformer_call.py
 
 
