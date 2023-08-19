@@ -1,0 +1,52 @@
+### Setup environment timeSformer
+Step 1:
+conda create -n timesformer python=3.7 -y
+source activate timesformer
+
+Step 2:
+conda install pytorch=1.8.1 torchvision=0.9.1 cudatoolkit=10.2 -c pytorch
+
+Step 3:
+pip install 'git+https://github.com/facebookresearch/fvcore'
+
+Step 4:
+pip install simplejson
+pip install einops
+pip install timm
+
+Step 5:
+conda install av -c conda-forge
+
+Step 6:
+pip install psutil
+pip install scikit-learn
+pip install opencv-python-headless
+pip install tensorboard
+
+Step 7:
+pip install pyyaml
+pip install munch
+pip install matplotlib
+
+Step 8:
+select correct interpreter (the conda timesformer environment) in vscode
+
+Step 9:
+clone repository TimeSformer https://github.com/facebookresearch/TimeSformer.git and add folders "timesformer" and "tools" to project
+replace train_net, test_net, vit.py, meters.py, checkpoint.py with the ones in this repository
+
+Step 10:
+set path to TimeSformer_divST_8x32_224_k600.pyth
+set path to datasets
+
+Step 11:
+run timesformer_call.py
+
+
+### Setup environment DenseNet
+conda create -n densenet python=3.7 -y
+conda activate densenet
+
+pip install tensorflow
+pip install matplotlib
+pip install sklearn
