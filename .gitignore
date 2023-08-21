@@ -145,7 +145,6 @@ Model_Files/
 *.pyth
 
 # timesformer
-timesformer/
 tools/
 configs/
 checkpoints/
