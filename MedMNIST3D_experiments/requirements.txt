@@ -37,16 +37,10 @@ replace train_net, test_net, vit.py, meters.py, checkpoint.py with the ones in t
 
 Step 10:
 set path to TimeSformer_divST_8x32_224_k600.pyth
-set path to datasets
 
 Step 11:
+pip install medmnist
+set DATASET_NAME and corresponding NUM_CLASSES in timesformer_call
+
+Step 12:
 run timesformer_call.py
-
-
-### Setup environment DenseNet
-conda create -n densenet python=3.7 -y
-conda activate densenet
-
-pip install tensorflow
-pip install matplotlib
-pip install sklearn

@@ -425,7 +425,7 @@ def train(cfg):
       cu.load_checkpoint(cfg.TRAIN.CHECKPOINT_FILE_PATH, model)
 
     # Create the video train and val loaders.
-    train_dataset, val_dataset = load_dataset_train_valid(cfg.DATA.SIZE, cfg.DATA.CLASSES)
+    train_dataset, val_dataset = load_dataset_train_valid(cfg.DATA.DATASET_NAME)
     train_loader = loader.construct_loader(train_dataset, cfg, "train")
     val_loader = loader.construct_loader(val_dataset, cfg, "val")
 
@@ -527,11 +527,11 @@ def create_model(cfg):
     model = copy.deepcopy(model_orig)
 
     weight = model.model.patch_embed.proj.weight
-    model.model.patch_embed.proj = torch.nn.Conv2d(1, 768, kernel_size=(16, 16), stride=(16, 16))
-    weight_new = torch.reshape(weight, (3, 768, 16, 16))
-    weight_new_reshape = torch.reshape(weight_new[0], (768, 1, 16, 16))
-    with torch.no_grad():
-        model.model.patch_embed.proj.weight = torch.nn.Parameter(weight_new_reshape)
+    model.model.patch_embed.proj = torch.nn.Conv2d(1, 768, kernel_size=(7, 7), stride=(7, 7))
+    # weight_new = torch.reshape(weight, (3, 768, 7, 7))
+    # weight_new_reshape = torch.reshape(weight_new[0], (768, 1, 7, 7))
+    # with torch.no_grad():
+    #     model.model.patch_embed.proj.weight = torch.nn.Parameter(weight_new_reshape)
     model.model.head = torch.nn.Linear(in_features = 768, out_features=cfg.MODEL.NUM_CLASSES, bias = True) # 2 / 3
     return model
 

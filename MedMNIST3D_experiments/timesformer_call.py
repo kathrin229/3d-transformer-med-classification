@@ -9,6 +9,15 @@ from tools.test_net import test
 
 import time
 
+# DATASET_NAME and NUM_CLASSES
+# FractureMNIST3D : 3
+# VesselMNIST3D : 2
+# SynapseMNIST3D : 2
+# AdrenalMNIST3D : 2
+# NoduleMNIST3D : 2
+# OrganMNIST3D : 11
+
+# ATTENTION_TYPE: 'space_limited' 'time_limited' 'space_and_time_limited'
 
 ## Config oriented at timesformer/config/defaults.py from https://github.com/facebookresearch/TimeSformer
 config = yaml.safe_load("""
@@ -36,15 +45,15 @@ DATA:
     INPUT_CHANNEL_NUM: [1]
     MULTI_LABEL: False
     ENSEMBLE_METHOD: "sum"
-    CLASSES: ['CP', 'NCP']
-    SIZE: '160x128x32'
+    DATASET_NAME: "FractureMNIST3D"
+
 TIMESFORMER:
     ATTENTION_TYPE: 'time_limited'
     
 MODEL:
     PRETRAINED_MODEL_NAME: 'Model_Files/TimeSformer_divST_8x32_224_K600.pyth'
     MODEL_NAME: 'timesformer_tl_2class_160x128x32.pt'
-    NUM_CLASSES: 2
+    NUM_CLASSES: 3
     ARCH: vit
     LOSS_FUNC: cross_entropy
     DROPOUT_RATE: 0.5

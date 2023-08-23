@@ -163,7 +163,7 @@ def test(cfg):
         misc.log_model_info(model, cfg, use_train_input=False)
 
     # Create testing loaders.
-    test_loader = load_dataset_test(cfg.DATA.SIZE, cfg.DATA.CLASSES)
+    test_loader = load_dataset_test(cfg.DATA.DATASET_NAME)
 
     logger.info("Testing model for {} iterations".format(len(test_loader)))
 

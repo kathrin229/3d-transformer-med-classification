@@ -124,9 +124,9 @@ class Block(nn.Module):
             return x
 
         if self.attention_type == 'space_limited':
-            num_p_w = 5 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
-            num_p_h = 4 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
-            num_p_all = 20 # number of patch blocks in total: 20 for 2x2 patch blocks, 4 for 5x4 patch blocks
+            num_p_w = 2 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_h = 2 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_all = 4 # number of patch blocks in total: 20 for 2x2 patch blocks, 4 for 5x4 patch blocks
             p_w = 2 # patch width
             p_h = 2 # patch height
 
@@ -154,8 +154,8 @@ class Block(nn.Module):
             return x
 
         elif self.attention_type == 'time_limited':
-            p_size = 8 # the size of a patch block (in time direction) / the number of slices considered together
-            num_p = 4 # number of patch blocks in total: 4 when taking every 8 slices together
+            p_size = 4 # the size of a patch block (in time direction) / the number of slices considered together
+            num_p = 7 # number of patch blocks in total: 4 when taking every 8 slices together
 
             init_cls_token = x[:,0,:].unsqueeze(1)
             cls_token = init_cls_token.repeat(1, num_p, 1) #taking 8 slices together
@@ -178,17 +178,17 @@ class Block(nn.Module):
             return x
 
         elif self.attention_type == 'space_and_time_limited':
-            num_p_w = 5 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
-            num_p_h = 4 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
-            num_p_all = 80 # number of patch blocks in total: 4 times 5 times 4 patch blocks
+            num_p_w = 2 # number of patch blocks along width: 5 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_h = 2 # number of patch blocks along height: 4 for 2x2 patch blocks, 2 for 5x4 patch blocks
+            num_p_all = 28 # number of patch blocks in total: 4 times 5 times 4 patch blocks
             p_w = 2 # patch width
             p_h = 2 # patch height
-            p_t = 8 # the size of a patch block (in time direction) / the number of slices considered together
-            num_p_t = 4 # number of patch blocks in time direction: 4 when taking every 8 slices together
+            p_t = 4 # the size of a patch block (in time direction) / the number of slices considered together
+            num_p_t = 7 # number of patch blocks in time direction: 4 when taking every 8 slices together
 
             init_cls_token = x[:,0,:].unsqueeze(1)
             cls_token = init_cls_token.repeat(1, num_p_all, 1)
-            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=80).unsqueeze(1)
+            cls_token = rearrange(cls_token, 'b t m -> (b t) m',b=B,t=num_p_all).unsqueeze(1)
             xs = x[:,1:,:]
             xs = rearrange(xs, 'b (h1 h w1 w t1 t) m -> b (h1 h) (w1 w) (t1 t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
             xs = rearrange(xs, 'b (h1 h) (w1 w) (t1 t) m -> (b h1 w1 t1) (h w t) m', b=B,h=p_h,w=p_w,t=p_t,h1=num_p_h,w1=num_p_w,t1=num_p_t)
