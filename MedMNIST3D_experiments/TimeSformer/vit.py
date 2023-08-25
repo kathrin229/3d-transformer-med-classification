@@ -166,7 +166,7 @@ class Block(nn.Module):
             res_spatial = self.drop_path(self.attn(self.norm1(xs)))
 
             cls_token = res_spatial[:,0,:]
-            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=4)
+            cls_token = rearrange(cls_token, '(b t) m -> b t m',b=B,t=p_size)
             cls_token = torch.mean(cls_token,1,True) ## averaging for every frame
 
             res_spatial = res_spatial[:,1:,:]
