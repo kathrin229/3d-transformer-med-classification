@@ -87,6 +87,10 @@ def load_dataset_train_valid(medmnist3d_dataset):
         dataset_train = OrganMNIST3D(split="train", download=True)
         dataset_test = OrganMNIST3D(split="test", download=True)
 
+    # scaling data between 0 and 1
+    dataset_train.imgs = dataset_train.imgs / 255
+
+    # making data fit for timesformer input: (B x C x H x W x D)
     dataset_train.imgs = dataset_train.imgs[:, :, :, :, np.newaxis]
     dataset_train.imgs = dataset_train.imgs.reshape(-1, 1, 28, 28, 28)
 
@@ -133,6 +137,10 @@ def load_dataset_test(medmnist3d_dataset):
     elif medmnist3d_dataset == "OrganMNIST3D":
         dataset_test = OrganMNIST3D(split="test", download=True)
 
+    # scaling data between 0 and 1
+    dataset_test.imgs = dataset_test.imgs / 255
+
+    # making data fit for timesformer input: (B x C x H x W x D)
     dataset_test.imgs = dataset_test.imgs[:, :, :, :, np.newaxis]
     dataset_test.imgs = dataset_test.imgs.reshape(-1, 1, 28, 28, 28)
 
