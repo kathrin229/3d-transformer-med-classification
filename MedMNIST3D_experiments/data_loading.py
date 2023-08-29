@@ -140,9 +140,10 @@ def load_dataset_test(medmnist3d_dataset):
     # scaling data between 0 and 1
     dataset_test.imgs = dataset_test.imgs / 255
 
-    # making data fit for timesformer input: (B x C x H x W x D)
+    # making data fit for timesformer input: (B x C x H x W x D) with B = 1
     dataset_test.imgs = dataset_test.imgs[:, :, :, :, np.newaxis]
     dataset_test.imgs = dataset_test.imgs.reshape(-1, 1, 28, 28, 28)
+    dataset_test.imgs = dataset_test.imgs.reshape(-1, 1, 1, 28, 28, 28)
 
     x_test = dataset_test.imgs
     y_test = np.squeeze(dataset_test.labels)
